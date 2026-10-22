@@ -109,7 +109,16 @@ export function generateShareText(result, session) {
 
   const sumCheck = result.participantResults.reduce((acc, curr) => acc + curr.finalAmount, 0);
   text += `\nTotal Akumulasi: ${formatIDR(sumCheck)} (Pas 100%)\n`;
-  text += `Dihitung via: https://split-bill-sigma-two.vercel.app/`;
+
+  if (session.paymentInfo && (session.paymentInfo.accountNumber || session.paymentInfo.bankName)) {
+    const bank = session.paymentInfo.bankName ? `${session.paymentInfo.bankName} ` : '';
+    const acc = session.paymentInfo.accountNumber || '';
+    const holder = session.paymentInfo.accountHolder ? ` (a/n ${session.paymentInfo.accountHolder})` : '';
+    text += `\nTransfer Pembayaran:\n`;
+    text += `• ${bank}${acc}${holder}\n`;
+  }
+
+  text += `\nDihitung via: https://split-bill-sigma-two.vercel.app/`;
 
   return text;
 }

@@ -29,9 +29,55 @@ const state = {
     tax: { type: FeeType.PERCENT, value: 10 },
     tip: { type: FeeType.PERCENT, value: 0 }
   },
+  paymentInfo: {
+    bankName: '',
+    accountNumber: '',
+    accountHolder: ''
+  },
   theme: localStorage.getItem('splitbill_theme') || 'dark',
   lastCalculationResult: null
 };
+
+// Storage Key
+const STORAGE_KEY = 'splitbill_saved_session_v1';
+
+function saveToStorage() {
+  try {
+    const sessionData = {
+      mode: state.mode,
+      subtotal: state.subtotal,
+      participants: state.participants,
+      items: state.items,
+      fees: state.fees,
+      paymentInfo: state.paymentInfo
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionData));
+  } catch (e) {
+    console.warn('Storage save failed:', e);
+  }
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (parsed) {
+      if (parsed.mode) state.mode = parsed.mode;
+      if (typeof parsed.subtotal === 'number') state.subtotal = parsed.subtotal;
+      if (Array.isArray(parsed.participants) && parsed.participants.length > 0) {
+        state.participants = parsed.participants;
+      }
+      if (Array.isArray(parsed.items)) state.items = parsed.items;
+      if (parsed.fees) state.fees = parsed.fees;
+      if (parsed.paymentInfo) state.paymentInfo = parsed.paymentInfo;
+      return true;
+    }
+  } catch (e) {
+    console.warn('Storage load failed:', e);
+  }
+  return false;
+}
 
 // SVG Templates
 const SVG_ICONS = {
@@ -46,14 +92,19 @@ const SVG_ICONS = {
 
 // Inisialisasi DOM
 document.addEventListener('DOMContentLoaded', () => {
+  loadFromStorage();
   initTheme();
   initModeSwitcher();
   initEqualModeControls();
   initItemizedModeControls();
   initFeeControls();
+  initPaymentControls();
   initActionButtons();
   initCollapsible();
   
+  // Sinkronkan nilai UI yang dimuat dari storage
+  syncLoadedStateToUI();
+
   // Render awal
   renderEqualParticipants();
   renderItemizedParticipants();
@@ -63,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 0. Preloader Management
+// 0. Preloader Management (Durasi Disesuaikan Lebih Lama & Smooth)
 // ==========================================
 function initPreloader() {
   const preloader = document.getElementById('appPreloader');
@@ -77,7 +128,7 @@ function initPreloader() {
           preloader.parentNode.removeChild(preloader);
         }
       }, { once: true });
-    }, 650);
+    }, 1350); // Durasi diperlama sesuai permintaan (1.35 detik)
   };
 
   if (document.readyState === 'complete') {
@@ -496,6 +547,81 @@ function initCollapsible() {
 }
 
 // ==========================================
+// 5b. Payment Controls & Storage Sync
+// ==========================================
+function initPaymentControls() {
+  const bankInput = document.getElementById('paymentBankInput');
+  const accInput = document.getElementById('paymentAccountInput');
+  const holderInput = document.getElementById('paymentHolderInput');
+
+  if (bankInput && state.paymentInfo.bankName) bankInput.value = state.paymentInfo.bankName;
+  if (accInput && state.paymentInfo.accountNumber) accInput.value = state.paymentInfo.accountNumber;
+  if (holderInput && state.paymentInfo.accountHolder) holderInput.value = state.paymentInfo.accountHolder;
+
+  [bankInput, accInput, holderInput].forEach(inp => {
+    if (!inp) return;
+    inp.addEventListener('input', () => {
+      state.paymentInfo = {
+        bankName: (bankInput?.value || '').trim(),
+        accountNumber: (accInput?.value || '').trim(),
+        accountHolder: (holderInput?.value || '').trim()
+      };
+      saveToStorage();
+      updateCalculation();
+    });
+  });
+}
+
+function syncLoadedStateToUI() {
+  // 1. Sync Subtotal & Peserta count
+  const subtotalInput = document.getElementById('equalSubtotalInput');
+  if (subtotalInput) {
+    subtotalInput.value = formatIDR(state.subtotal).replace('Rp ', '');
+  }
+  const countDisplay = document.getElementById('participantCountDisplay');
+  if (countDisplay) {
+    countDisplay.textContent = state.participants.length;
+  }
+
+  // 2. Sync Mode Tab
+  const tabEqual = document.getElementById('tabModeEqual');
+  const tabItemized = document.getElementById('tabModeItemized');
+  const sectionEqual = document.getElementById('sectionEqualMode');
+  const sectionItemized = document.getElementById('sectionItemizedMode');
+
+  if (state.mode === SplitMode.ITEMIZED) {
+    tabItemized?.classList.add('active');
+    tabEqual?.classList.remove('active');
+    if (sectionEqual) sectionEqual.style.display = 'none';
+    if (sectionItemized) sectionItemized.style.display = 'block';
+  } else {
+    tabEqual?.classList.add('active');
+    tabItemized?.classList.remove('active');
+    if (sectionEqual) sectionEqual.style.display = 'block';
+    if (sectionItemized) sectionItemized.style.display = 'none';
+  }
+
+  // 3. Sync Fees Inputs & Units
+  ['discount', 'service', 'tax', 'tip'].forEach(key => {
+    const fee = state.fees[key];
+    const input = document.getElementById(`${key}ValInput`);
+    if (input && fee) {
+      input.value = fee.type === FeeType.NOMINAL
+        ? formatIDR(fee.value).replace('Rp ', '')
+        : fee.value;
+      const feeGroup = input.closest('.form-group');
+      if (feeGroup) {
+        const unitBtns = feeGroup.querySelectorAll('.toggle-unit-btn');
+        unitBtns.forEach(b => {
+          if (b.dataset.unit === fee.type) b.classList.add('active');
+          else b.classList.remove('active');
+        });
+      }
+    }
+  });
+}
+
+// ==========================================
 // 6. Action Buttons & Sharing
 // ==========================================
 function initActionButtons() {
@@ -549,10 +675,19 @@ function initActionButtons() {
 
   btnReset.addEventListener('click', () => {
     if (confirm('Yakin ingin mereset seluruh data tagihan?')) {
+      localStorage.removeItem(STORAGE_KEY);
       state.subtotal = 0;
       state.items = [];
+      state.participants = [
+        { id: `p_${Date.now()}_1`, name: 'Teman 1' },
+        { id: `p_${Date.now()}_2`, name: 'Teman 2' }
+      ];
       document.getElementById('equalSubtotalInput').value = '0';
+      document.getElementById('participantCountDisplay').textContent = state.participants.length;
+      renderEqualParticipants();
+      renderItemizedParticipants();
       renderItems();
+      saveToStorage();
       updateCalculation();
       showToast('Tagihan berhasil direset');
     }
@@ -603,6 +738,23 @@ function updateCalculation() {
   } else {
     unassignedBanner.style.display = 'none';
   }
+
+  // Update Badge Info Rekening di Hero Card jika terisi
+  const paymentBadge = document.getElementById('paymentDisplayBadge');
+  const paymentText = document.getElementById('paymentDisplayText');
+  if (paymentBadge && paymentText) {
+    const { bankName, accountNumber, accountHolder } = state.paymentInfo || {};
+    if (bankName || accountNumber) {
+      paymentBadge.style.display = 'flex';
+      const holderStr = accountHolder ? ` (a/n ${accountHolder})` : '';
+      paymentText.textContent = `${bankName ? bankName + ' ' : ''}${accountNumber}${holderStr}`;
+    } else {
+      paymentBadge.style.display = 'none';
+    }
+  }
+
+  // Simpan state terkini ke localStorage otomatis
+  saveToStorage();
 
   // Jalankan perhitungan di engine
   const result = calculateBill({

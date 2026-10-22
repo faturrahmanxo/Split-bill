@@ -54,8 +54,8 @@
         </div>
         <div>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <h1 class="brand-title">SplitBill.id</h1>
-            <span class="brand-badge">PRO</span>
+            <h1 class="brand-title">SplitBill</h1>
+            <span class="brand-badge">V1.0</span>
           </div>
         </div>
       </div>
@@ -309,6 +309,35 @@
             </div>
           </div>
         </section>
+
+        <!-- SECTION 4: Info Rekening Pembayaran Host (Opsional) -->
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+                <rect width="20" height="14" x="2" y="5" rx="2"/>
+                <line x1="2" x2="22" y1="10" y2="10"/>
+              </svg>
+              <span>Info Rekening Pembayaran (Opsional)</span>
+            </h2>
+          </div>
+          <div class="form-group">
+            <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 10px; margin-bottom: 12px;">
+              <div>
+                <label class="form-label" for="paymentBankInput">Bank / E-Wallet</label>
+                <input id="paymentBankInput" class="input-text" type="text" placeholder="BCA / GoPay / Dana...">
+              </div>
+              <div>
+                <label class="form-label" for="paymentAccountInput">Nomor Rekening / No HP</label>
+                <input id="paymentAccountInput" class="input-text tabular-nums" type="text" inputmode="numeric" placeholder="Contoh: 1234567890">
+              </div>
+            </div>
+            <div>
+              <label class="form-label" for="paymentHolderInput">Atas Nama (A/N)</label>
+              <input id="paymentHolderInput" class="input-text" type="text" placeholder="Contoh: Faturrahman">
+            </div>
+          </div>
+        </section>
       </div>
 
       <!-- RIGHT COLUMN: Live Calculation Output, Participants Breakdown & Share Actions -->
@@ -356,6 +385,10 @@
                 </svg>
                 <span>Presisi 100% pas</span>
               </span>
+            </div>
+            <div id="paymentDisplayBadge" class="breakdown-row highlight" style="display: none; padding-top: 8px; border-top: 1px dashed rgba(229, 210, 246, 0.2); align-items: center;">
+              <span>Tujuan Transfer:</span>
+              <span id="paymentDisplayText" class="tabular-nums" style="color: #e5d2f6; font-weight: 700;">-</span>
             </div>
           </div>
         </section>
