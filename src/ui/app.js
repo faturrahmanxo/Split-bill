@@ -286,24 +286,67 @@ function renderItems() {
     const card = document.createElement('div');
     card.className = 'item-card';
 
-    // Header Item: Nama, Harga, Qty, Delete
-    const topRow = document.createElement('div');
-    topRow.className = 'item-card-top';
-    topRow.innerHTML = `
-      <input class="input-text item-name-input" type="text" placeholder="Nama Menu" value="${escapeHtml(item.name)}">
-      <div class="input-currency-wrapper item-price-input">
-        <span class="input-currency-prefix" style="left: 10px; font-size: 13px;">Rp</span>
-        <input class="input-text tabular-nums" style="padding-left: 32px;" type="text" inputmode="numeric" value="${formatIDR(item.price).replace('Rp ', '')}">
+    const itemTotal = (item.price || 0) * (item.qty || 1);
+
+    card.innerHTML = `
+      <!-- Baris 1: Nama Menu & Tombol Hapus -->
+      <div class="item-card-header-row">
+        <div class="item-name-col">
+          <label class="item-mini-label">Nama Menu</label>
+          <input class="input-text item-name-input" type="text" placeholder="Contoh: Nasi Goreng" value="${escapeHtml(item.name)}">
+        </div>
+        <button class="item-delete-btn" title="Hapus Menu" type="button" aria-label="Hapus Menu">
+          ${SVG_ICONS.TRASH}
+        </button>
       </div>
-      <input class="input-text item-qty-input tabular-nums" type="number" min="1" value="${item.qty}">
-      <button class="item-delete-btn" title="Hapus Menu" type="button">${SVG_ICONS.TRASH}</button>
+
+      <!-- Baris 2: Harga Satuan & Jumlah Porsi -->
+      <div class="item-card-controls-row">
+        <div class="item-control-col item-price-col">
+          <label class="item-mini-label">Harga Satuan</label>
+          <div class="input-currency-wrapper item-price-input-wrap">
+            <span class="input-currency-prefix" style="left: 12px; font-size: 13px;">Rp</span>
+            <input class="input-text tabular-nums item-price-field" type="text" inputmode="numeric" placeholder="0" value="${formatIDR(item.price).replace('Rp ', '')}">
+          </div>
+        </div>
+
+        <div class="item-control-col item-qty-col">
+          <label class="item-mini-label">Jumlah (Porsi)</label>
+          <div class="item-qty-stepper">
+            <button class="qty-btn qty-btn-dec" type="button" aria-label="Kurang Porsi">
+              <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="M5 12h14"/></svg>
+            </button>
+            <input class="input-text tabular-nums qty-number-input" type="number" min="1" max="999" value="${item.qty}">
+            <button class="qty-btn qty-btn-inc" type="button" aria-label="Tambah Porsi">
+              <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Baris 3: Siapa yang pesan menu ini? -->
+      <div class="item-allocation-section">
+        <div class="item-allocation-label">
+          <span>Siapa yang pesan menu ini?</span>
+          <span class="item-subtotal-badge tabular-nums">Total: ${formatIDR(itemTotal)}</span>
+        </div>
+        <div class="participant-selectors"></div>
+      </div>
     `;
 
     // Event listeners
-    const nameInput = topRow.querySelector('.item-name-input');
-    const priceInput = topRow.querySelector('.item-price-input input');
-    const qtyInput = topRow.querySelector('.item-qty-input');
-    const delBtn = topRow.querySelector('.item-delete-btn');
+    const nameInput = card.querySelector('.item-name-input');
+    const priceInput = card.querySelector('.item-price-field');
+    const qtyInput = card.querySelector('.qty-number-input');
+    const btnDec = card.querySelector('.qty-btn-dec');
+    const btnInc = card.querySelector('.qty-btn-inc');
+    const delBtn = card.querySelector('.item-delete-btn');
+    const subtotalBadge = card.querySelector('.item-subtotal-badge');
+
+    const updateItemTotal = () => {
+      const tot = (item.price || 0) * (item.qty || 1);
+      if (subtotalBadge) subtotalBadge.textContent = `Total: ${formatIDR(tot)}`;
+    };
 
     nameInput.addEventListener('input', (e) => {
       item.name = e.target.value;
@@ -313,11 +356,29 @@ function renderItems() {
     priceInput.addEventListener('input', (e) => {
       item.price = parseIDR(e.target.value);
       priceInput.value = formatIDR(item.price).replace('Rp ', '');
+      updateItemTotal();
       updateCalculation();
     });
 
     qtyInput.addEventListener('input', (e) => {
       item.qty = Math.max(1, parseInt(e.target.value, 10) || 1);
+      updateItemTotal();
+      updateCalculation();
+    });
+
+    btnDec.addEventListener('click', () => {
+      if (item.qty > 1) {
+        item.qty -= 1;
+        qtyInput.value = item.qty;
+        updateItemTotal();
+        updateCalculation();
+      }
+    });
+
+    btnInc.addEventListener('click', () => {
+      item.qty += 1;
+      qtyInput.value = item.qty;
+      updateItemTotal();
       updateCalculation();
     });
 
@@ -328,12 +389,7 @@ function renderItems() {
     });
 
     // Participant Selectors (Who ordered/shared this?)
-    const allocLabel = document.createElement('div');
-    allocLabel.className = 'item-allocation-label';
-    allocLabel.innerHTML = `<span>Siapa yang pesan menu ini?</span>`;
-
-    const selectorWrap = document.createElement('div');
-    selectorWrap.className = 'participant-selectors';
+    const selectorWrap = card.querySelector('.participant-selectors');
 
     state.participants.forEach(p => {
       const isSelected = item.participantIds.includes(p.id);
@@ -359,9 +415,6 @@ function renderItems() {
       selectorWrap.appendChild(pChip);
     });
 
-    card.appendChild(topRow);
-    card.appendChild(allocLabel);
-    card.appendChild(selectorWrap);
     container.appendChild(card);
   });
 }

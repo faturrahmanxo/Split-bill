@@ -492,6 +492,9 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   transition: all var(--transition-fast);
 }
 
@@ -499,24 +502,36 @@ body {
   border-color: rgba(197, 165, 219, 0.35);
 }
 
-.item-card-top {
+/* Tier 1: Item Name & Delete Button */
+.item-card-header-row {
   display: flex;
+  align-items: flex-end;
   gap: 10px;
-  align-items: center;
-  margin-bottom: 12px;
+}
+
+.item-name-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-mini-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--palette-lilac);
+}
+
+[data-theme="light"] .item-mini-label {
+  color: var(--palette-deep);
 }
 
 .item-name-input {
-  flex: 1;
-}
-
-.item-price-input {
-  width: 150px;
-}
-
-.item-qty-input {
-  width: 70px;
-  text-align: center;
+  width: 100%;
+  font-weight: 600;
+  font-size: 15px;
 }
 
 .item-delete-btn {
@@ -524,12 +539,13 @@ body {
   border: 1px solid transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  padding: 8px;
+  padding: 10px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .item-delete-btn:hover {
@@ -538,14 +554,112 @@ body {
   border-color: rgba(240, 98, 146, 0.3);
 }
 
+/* Tier 2: Price and Quantity Side-by-Side */
+.item-card-controls-row {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.item-control-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-price-input-wrap {
+  width: 100%;
+}
+
+.item-price-field {
+  width: 100%;
+  font-size: 15px;
+  font-weight: 700;
+  padding-left: 36px !important;
+}
+
+/* Stepper Mini for Qty */
+.item-qty-stepper {
+  display: flex;
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 4px;
+  height: 44px;
+}
+
+.qty-btn {
+  width: 34px;
+  height: 36px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.qty-btn:hover {
+  background: var(--palette-amethyst);
+  color: #ffffff;
+  border-color: var(--palette-lilac);
+}
+
+.qty-number-input {
+  width: 100%;
+  flex: 1;
+  text-align: center;
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+  font-weight: 800;
+  font-size: 15px;
+  padding: 0 !important;
+  -moz-appearance: textfield;
+}
+
+.qty-number-input::-webkit-outer-spin-button,
+.qty-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Tier 3: Allocation */
+.item-allocation-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border-subtle);
+}
+
 .item-allocation-label {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-tertiary);
-  margin-bottom: 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.item-subtotal-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--palette-lilac);
+  background: var(--accent-secondary-bg);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+[data-theme="light"] .item-subtotal-badge {
+  color: var(--palette-deep);
 }
 
 .participant-selectors {
@@ -989,16 +1103,19 @@ body {
     font-size: 30px;
   }
 
-  .item-card-top {
-    flex-wrap: wrap;
+  .item-card {
+    padding: 14px;
+    gap: 10px;
   }
 
-  .item-name-input {
-    width: 100%;
+  .item-card-controls-row {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 8px;
   }
 
-  .item-price-input {
-    flex: 1;
+  .item-price-field {
+    font-size: 14px;
+    padding-left: 32px !important;
   }
 
   .sidebar-actions-panel {
