@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SplitBill.id — Kalkulator Patungan & Pajak Restoran Cepat & Akurat</title>
+  <meta name="description" content="Aplikasi hitung patungan dan split bill restoran gratis tanpa login. Mendukung bagi rata dan per pesanan, hitung otomatis pajak PB1 10%, service charge, diskon, dan tip dengan pembulatan presisi.">
+  <meta name="theme-color" content="#1d0929">
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+<body>
+  <!-- Smooth Aesthetic Preloader Screen -->
+  <div id="appPreloader" class="app-preloader" aria-hidden="true">
+    <div class="preloader-content">
+      <div class="preloader-logo-wrap">
+        <div class="preloader-glow"></div>
+        <div class="preloader-icon-box">
+          <svg class="icon-svg preloader-icon" viewBox="0 0 24 24">
+            <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>
+            <path class="scan-line-1" d="M16 8h-8"/>
+            <path class="scan-line-2" d="M16 12h-8"/>
+            <path class="scan-line-3" d="M11 16H8"/>
+          </svg>
+        </div>
+      </div>
+      <div class="preloader-text-group">
+        <h2 class="preloader-title">SplitBill<span class="preloader-accent">.id</span></h2>
+        <p class="preloader-subtitle">Menyiapkan kalkulator presisi...</p>
+      </div>
+      <div class="preloader-bar-wrap">
+        <div class="preloader-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand-wrapper">
+        <div class="brand-icon">
+          <svg class="icon-svg icon-lg" viewBox="0 0 24 24">
+            <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>
+            <path d="M16 8h-8"/>
+            <path d="M16 12h-8"/>
+            <path d="M11 16H8"/>
+          </svg>
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h1 class="brand-title">SplitBill.id</h1>
+            <span class="brand-badge">PRO</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="themeToggleBtn" class="btn-icon" aria-label="Ganti Tema" title="Ganti Tema">
+          <span id="themeIcon">
+            <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2"/>
+              <path d="M12 20v2"/>
+              <path d="m4.93 4.93 1.41 1.41"/>
+              <path d="m17.66 17.66 1.41 1.41"/>
+              <path d="M2 12h2"/>
+              <path d="M20 12h2"/>
+              <path d="m6.34 17.66-1.41 1.41"/>
+              <path d="m19.07 4.93-1.41 1.41"/>
+            </svg>
+          </span>
+        </button>
+        <button id="resetSessionBtn" class="btn-icon" aria-label="Reset Tagihan" title="Reset Tagihan">
+          <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Responsive Dashboard Grid -->
+    <main class="dashboard-grid">
+      
+      <!-- LEFT COLUMN: Inputs, Mode, Items, & Fees -->
+      <div class="dashboard-left-col">
+        
+        <!-- Mode Switcher (SCR-001) -->
+        <nav class="mode-switcher-container" aria-label="Pilih Mode Pembagian">
+          <button id="tabModeEqual" class="mode-tab active" data-mode="EQUAL" type="button">
+            <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span>Bagi Rata</span>
+          </button>
+          <button id="tabModeItemized" class="mode-tab" data-mode="ITEMIZED" type="button">
+            <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+              <path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"/>
+              <path d="M15 11v11"/>
+              <path d="M5 2v10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V2"/>
+              <path d="M8 2v10"/>
+              <path d="M8 14v8"/>
+            </svg>
+            <span>Per Pesanan</span>
+          </button>
+        </nav>
+
+        <!-- Warning & Status Banners -->
+        <div id="unassignedWarning" class="alert-banner" style="display: none;">
+          <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+            <line x1="12" x2="12" y1="9" y2="13"/>
+            <line x1="12" x2="12.01" y1="17" y2="17"/>
+          </svg>
+          <span id="unassignedWarningText">Ada item yang belum ditentukan pemiliknya.</span>
+        </div>
+
+        <!-- SECTION 1: Mode Bagi Rata (SCR-001) -->
+        <section id="sectionEqualMode" class="card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+                <rect width="20" height="14" x="2" y="5" rx="2"/>
+                <line x1="2" x2="22" y1="10" y2="10"/>
+              </svg>
+              <span>Data Tagihan Bersama</span>
+            </h2>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="equalSubtotalInput">Subtotal Tagihan (Makanan & Minuman)</label>
+            <div class="input-currency-wrapper">
+              <span class="input-currency-prefix">Rp</span>
+              <input 
+                id="equalSubtotalInput" 
+                class="input-currency tabular-nums" 
+                type="text" 
+                inputmode="numeric" 
+                placeholder="0"
+                value="200.000"
+              >
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Jumlah Orang yang Patungan</label>
+            <div class="stepper-container">
+              <button id="btnDecParticipants" class="stepper-btn" type="button" aria-label="Kurangi Peserta">
+                <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="M5 12h14"/></svg>
+              </button>
+              <div id="participantCountDisplay" class="stepper-value tabular-nums">3</div>
+              <button id="btnIncParticipants" class="stepper-btn" type="button" aria-label="Tambah Peserta">
+                <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Participant Names for Equal Mode -->
+          <div class="form-group">
+            <label class="form-label">Nama Teman (Opsional)</label>
+            <div id="equalParticipantsList" class="participants-wrap">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: Mode Berdasarkan Pesanan (SCR-002) -->
+        <section id="sectionItemizedMode" class="card" style="display: none;">
+          <div class="card-header">
+            <h2 class="card-title">
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              <span>Daftar Peserta</span>
+            </h2>
+          </div>
+          <div class="form-group">
+            <div style="display: flex; gap: 8px;">
+              <input id="newParticipantInput" class="input-text" type="text" placeholder="Nama teman (misal: Budi)...">
+              <button id="btnAddParticipant" class="btn-primary" style="padding: 10px 18px;" type="button">
+                <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                <span>Tambah</span>
+              </button>
+            </div>
+            <div id="itemizedParticipantsList" class="participants-wrap">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+
+          <div class="card-header" style="margin-top: 24px;">
+            <h2 class="card-title">
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+                <path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"/>
+                <path d="M15 11v11"/>
+                <path d="M5 2v10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V2"/>
+                <path d="M8 2v10"/>
+                <path d="M8 14v8"/>
+              </svg>
+              <span>Item Pesanan</span>
+            </h2>
+            <button id="btnAddItem" class="preset-chip" style="background: var(--palette-amethyst); color: white; display: flex; align-items: center; gap: 6px;" type="button">
+              <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              <span>Tambah Menu</span>
+            </button>
+          </div>
+
+          <div id="itemsContainer" class="items-list">
+            <!-- Rendered by JS -->
+          </div>
+        </section>
+
+        <!-- SECTION 3: Pengaturan Pajak & Biaya Tambahan (SCR-003) -->
+        <section class="card">
+          <button id="toggleFeesBtn" class="collapsible-trigger" type="button" aria-expanded="true">
+            <span class="card-title">
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+                <line x1="4" x2="4" y1="21" y2="14"/>
+                <line x1="4" x2="4" y1="10" y2="3"/>
+                <line x1="12" x2="12" y1="21" y2="12"/>
+                <line x1="12" x2="12" y1="8" y2="3"/>
+                <line x1="20" x2="20" y1="21" y2="16"/>
+                <line x1="20" x2="20" y1="12" y2="3"/>
+                <line x1="1" x2="7" y1="14" y2="14"/>
+                <line x1="9" x2="15" y1="8" y2="8"/>
+                <line x1="17" x2="23" y1="16" y2="16"/>
+              </svg>
+              <span>Pajak, Service, Diskon & Tip</span>
+            </span>
+            <span id="toggleFeesIcon">
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg>
+            </span>
+          </button>
+
+          <div id="feesContent" class="collapsible-content">
+            <!-- Diskon -->
+            <div class="form-group">
+              <div class="fee-input-row">
+                <label class="form-label" style="margin-bottom: 0;">Diskon Promosi</label>
+                <div class="toggle-unit">
+                  <button class="toggle-unit-btn active" data-fee="discount" data-unit="PERCENT" type="button">%</button>
+                  <button class="toggle-unit-btn" data-fee="discount" data-unit="NOMINAL" type="button">Rp</button>
+                </div>
+              </div>
+              <input id="discountValInput" class="input-text tabular-nums" type="text" inputmode="numeric" value="10" placeholder="0">
+              <div class="presets-group">
+                <button class="preset-chip" data-target="discount" data-val="0" type="button">0%</button>
+                <button class="preset-chip" data-target="discount" data-val="10" type="button">10%</button>
+                <button class="preset-chip" data-target="discount" data-val="20" type="button">20%</button>
+                <button class="preset-chip" data-target="discount" data-val="50" type="button">50%</button>
+              </div>
+            </div>
+
+            <!-- Service Charge -->
+            <div class="form-group">
+              <div class="fee-input-row">
+                <label class="form-label" style="margin-bottom: 0;">Service Charge (Layanan Restoran)</label>
+                <div class="toggle-unit">
+                  <button class="toggle-unit-btn active" data-fee="service" data-unit="PERCENT" type="button">%</button>
+                  <button class="toggle-unit-btn" data-fee="service" data-unit="NOMINAL" type="button">Rp</button>
+                </div>
+              </div>
+              <input id="serviceValInput" class="input-text tabular-nums" type="text" inputmode="numeric" value="5" placeholder="0">
+              <div class="presets-group">
+                <button class="preset-chip" data-target="service" data-val="0" type="button">0%</button>
+                <button class="preset-chip" data-target="service" data-val="5" type="button">5%</button>
+                <button class="preset-chip" data-target="service" data-val="7" type="button">7%</button>
+                <button class="preset-chip" data-target="service" data-val="10" type="button">10%</button>
+              </div>
+            </div>
+
+            <!-- Pajak PB1 / Resto -->
+            <div class="form-group">
+              <div class="fee-input-row">
+                <label class="form-label" style="margin-bottom: 0;">Pajak Restoran (PB1 / PPN)</label>
+                <div class="toggle-unit">
+                  <button class="toggle-unit-btn active" data-fee="tax" data-unit="PERCENT" type="button">%</button>
+                  <button class="toggle-unit-btn" data-fee="tax" data-unit="NOMINAL" type="button">Rp</button>
+                </div>
+              </div>
+              <input id="taxValInput" class="input-text tabular-nums" type="text" inputmode="numeric" value="10" placeholder="0">
+              <div class="presets-group">
+                <button class="preset-chip" data-target="tax" data-val="0" type="button">0%</button>
+                <button class="preset-chip" data-target="tax" data-val="10" type="button">10% (PB1)</button>
+                <button class="preset-chip" data-target="tax" data-val="11" type="button">11% (PPN)</button>
+              </div>
+            </div>
+
+            <!-- Tip -->
+            <div class="form-group">
+              <div class="fee-input-row">
+                <label class="form-label" style="margin-bottom: 0;">Tip Tambahan (Sukarela)</label>
+                <div class="toggle-unit">
+                  <button class="toggle-unit-btn active" data-fee="tip" data-unit="PERCENT" type="button">%</button>
+                  <button class="toggle-unit-btn" data-fee="tip" data-unit="NOMINAL" type="button">Rp</button>
+                </div>
+              </div>
+              <input id="tipValInput" class="input-text tabular-nums" type="text" inputmode="numeric" value="0" placeholder="0">
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT COLUMN: Live Calculation Output, Participants Breakdown & Share Actions -->
+      <div class="dashboard-right-col">
+        
+        <!-- SECTION 4: Hero Total & Breakdown (SCR-004) -->
+        <section class="card hero-total-card">
+          <div class="total-meta-label">
+            <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" x2="12" y1="8" y2="12"/>
+              <line x1="12" x2="12.01" y1="16" y2="16"/>
+            </svg>
+            <span>Total Pembayaran Akhir</span>
+          </div>
+          <div id="finalTotalDisplay" class="total-amount-display tabular-nums">Rp 0</div>
+          
+          <div class="breakdown-summary">
+            <div class="breakdown-row">
+              <span>Subtotal Makanan:</span>
+              <span id="summarySubtotal" class="tabular-nums">Rp 0</span>
+            </div>
+            <div id="rowDiscount" class="breakdown-row" style="color: var(--accent-rose);">
+              <span>Diskon:</span>
+              <span id="summaryDiscount" class="tabular-nums">-Rp 0</span>
+            </div>
+            <div id="rowService" class="breakdown-row">
+              <span>Service Charge:</span>
+              <span id="summaryService" class="tabular-nums">+Rp 0</span>
+            </div>
+            <div id="rowTax" class="breakdown-row">
+              <span>Pajak Restoran PB1:</span>
+              <span id="summaryTax" class="tabular-nums">+Rp 0</span>
+            </div>
+            <div id="rowTip" class="breakdown-row">
+              <span>Tip:</span>
+              <span id="summaryTip" class="tabular-nums">+Rp 0</span>
+            </div>
+            <div class="breakdown-row highlight" style="padding-top: 8px; border-top: 1px dashed var(--border-subtle); align-items: center;">
+              <span>Status Pembagian:</span>
+              <span id="summaryStatus" style="display: flex; align-items: center; gap: 6px;">
+                <svg class="icon-svg icon-sm" viewBox="0 0 24 24" style="stroke: var(--accent-success);">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="m9 12 2 2 4-4"/>
+                </svg>
+                <span>Presisi 100% pas</span>
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5: Rincian Per Orang (SCR-004 / SCR-005) -->
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <polyline points="16 11 18 13 22 9"/>
+              </svg>
+              <span>Rincian Tiap Orang</span>
+            </h2>
+          </div>
+          <div id="participantsResultContainer">
+            <!-- Rendered by JS -->
+          </div>
+        </section>
+
+        <!-- Desktop Action Buttons -->
+        <div class="sidebar-actions-panel">
+          <button id="btnCopyTextDesktop" class="btn-secondary" type="button">
+            <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+              <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+            </svg>
+            <span>Salin Teks</span>
+          </button>
+          <button id="btnShareDesktop" class="btn-primary" type="button">
+            <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
+              <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
+            </svg>
+            <span>Bagikan Hasil</span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- App Footer -->
+    <footer class="app-footer">
+      <div class="footer-inner">
+        <p class="footer-copyright">&copy; 2026 FTR.dev | Built with clean code.</p>
+        <p class="footer-tagline">SplitBill.id Pro Utility &bull; Pemrosesan 100% Sisi Klien</p>
+      </div>
+    </footer>
+
+    <!-- Mobile Sticky Action Bar (visible on mobile only) -->
+    <footer class="sticky-bottom-bar">
+      <div class="action-bar-inner">
+        <button id="btnCopyText" class="btn-secondary" type="button">
+          <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+          </svg>
+          <span>Salin Teks</span>
+        </button>
+        <button id="btnShareWhatsApp" class="btn-primary" type="button">
+          <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
+            <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
+          </svg>
+          <span>Bagikan Hasil</span>
+        </button>
+      </div>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+  </div>
+
+  <!-- Main JavaScript App (ES Modules) -->
+  <script type="module" src="src/ui/app.js"></script>
+</body>
+</html>
