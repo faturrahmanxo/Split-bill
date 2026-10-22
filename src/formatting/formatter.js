@@ -109,7 +109,7 @@ export function generateShareText(result, session) {
 
   const sumCheck = result.participantResults.reduce((acc, curr) => acc + curr.finalAmount, 0);
   text += `\nTotal Akumulasi: ${formatIDR(sumCheck)} (Pas 100%)\n`;
-  text += `Dihitung via SplitBill.id`;
+  text += `Dihitung via: https://split-bill-sigma-two.vercel.app/`;
 
   return text;
 }
