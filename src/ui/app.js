@@ -12,6 +12,7 @@ import { formatIDR, parseIDR, generateShareText } from '../formatting/formatter.
 const state = {
   mode: SplitMode.EQUAL,
   subtotal: 200000,
+  roundingStep: 1,
   participants: [
     { id: 'p_1', name: 'Budi' },
     { id: 'p_2', name: 'Siti' },
@@ -46,6 +47,7 @@ function saveToStorage() {
     const sessionData = {
       mode: state.mode,
       subtotal: state.subtotal,
+      roundingStep: state.roundingStep,
       participants: state.participants,
       items: state.items,
       fees: state.fees,
@@ -65,6 +67,7 @@ function loadFromStorage() {
     if (parsed) {
       if (parsed.mode) state.mode = parsed.mode;
       if (typeof parsed.subtotal === 'number') state.subtotal = parsed.subtotal;
+      if (parsed.roundingStep) state.roundingStep = Number(parsed.roundingStep) || 1;
       if (Array.isArray(parsed.participants) && parsed.participants.length > 0) {
         state.participants = parsed.participants;
       }
@@ -98,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initEqualModeControls();
   initItemizedModeControls();
   initFeeControls();
+  initRoundingControls();
   initPaymentControls();
   initActionButtons();
   initCollapsible();
@@ -128,7 +132,7 @@ function initPreloader() {
           preloader.parentNode.removeChild(preloader);
         }
       }, { once: true });
-    }, 1350); // Durasi diperlama sesuai permintaan (1.35 detik)
+    }, 1500); // Durasi diperlama sesuai permintaan (1.35 detik)
   };
 
   if (document.readyState === 'complete') {
@@ -547,7 +551,26 @@ function initCollapsible() {
 }
 
 // ==========================================
-// 5b. Payment Controls & Storage Sync
+// 5b. Rounding Controls
+// ==========================================
+function initRoundingControls() {
+  const buttons = document.querySelectorAll('.rounding-pill-btn');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = Number(btn.dataset.rounding) || 1;
+      state.roundingStep = val;
+      buttons.forEach(b => {
+        if (Number(b.dataset.rounding) === val) b.classList.add('active');
+        else b.classList.remove('active');
+      });
+      saveToStorage();
+      updateCalculation();
+    });
+  });
+}
+
+// ==========================================
+// 5c. Payment Controls & Storage Sync
 // ==========================================
 function initPaymentControls() {
   const bankInput = document.getElementById('paymentBankInput');
@@ -617,6 +640,17 @@ function syncLoadedStateToUI() {
           else b.classList.remove('active');
         });
       }
+    }
+  });
+
+  // 4. Sync Rounding Buttons
+  const currentRounding = Number(state.roundingStep) || 1;
+  const roundingBtns = document.querySelectorAll('.rounding-pill-btn');
+  roundingBtns.forEach(b => {
+    if (Number(b.dataset.rounding) === currentRounding) {
+      b.classList.add('active');
+    } else {
+      b.classList.remove('active');
     }
   });
 }
@@ -760,6 +794,7 @@ function updateCalculation() {
   const result = calculateBill({
     mode: state.mode,
     subtotal: state.subtotal,
+    roundingStep: state.roundingStep,
     participants: state.participants,
     items: state.items,
     fees: state.fees
@@ -787,6 +822,33 @@ function updateCalculation() {
   rowTax.style.display = result.taxAmount > 0 ? 'flex' : 'none';
   rowTip.style.display = result.tipAmount > 0 ? 'flex' : 'none';
 
+  // Update Status Pembagian & Pembulatan
+  const summaryStatus = document.getElementById('summaryStatus');
+  if (summaryStatus) {
+    if (result.roundingStep && result.roundingStep > 1) {
+      const diff = result.roundingDifference || 0;
+      const diffText = diff === 0
+        ? 'Pas'
+        : (diff > 0 ? `Surplus +${formatIDR(diff)}` : `Selisih -${formatIDR(Math.abs(diff))}`);
+      const stepLabel = result.roundingStep === 100 ? 'Rp 100' : 'Rp 1.000';
+      summaryStatus.innerHTML = `
+        <svg class="icon-svg icon-sm" viewBox="0 0 24 24" style="stroke: var(--palette-lilac);">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+        <span>Dibulatkan ke ${stepLabel} (${diffText})</span>
+      `;
+    } else {
+      summaryStatus.innerHTML = `
+        <svg class="icon-svg icon-sm" viewBox="0 0 24 24" style="stroke: var(--accent-success);">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+        <span>Presisi 100% pas (Tanpa selisih)</span>
+      `;
+    }
+  }
+
   // Render Participants Result Accordion
   renderParticipantsResult(result);
 }
@@ -809,10 +871,16 @@ function renderParticipantsResult(result) {
     header.className = 'participant-result-header';
     header.innerHTML = `
       <div class="participant-info">
-        <div class="participant-avatar" style="width:28px; height:28px; font-size:12px;">${p.name.charAt(0).toUpperCase()}</div>
-        <span class="participant-name-text">${escapeHtml(p.name)}</span>
+        <div class="participant-avatar" style="width:30px; height:30px; font-size:12px;">${p.name.charAt(0).toUpperCase()}</div>
+        <div style="display:flex; flex-direction:column;">
+          <span class="participant-name-text">${escapeHtml(p.name)}</span>
+          <span style="font-size:11px; color:var(--text-tertiary);">Klik untuk rincian</span>
+        </div>
       </div>
-      <div class="participant-amount-text tabular-nums">${formatIDR(p.finalAmount)}</div>
+      <div class="participant-amount-col">
+        <div class="participant-amount-badge">Total Bayar</div>
+        <div class="participant-amount-text tabular-nums">${formatIDR(p.finalAmount)}</div>
+      </div>
     `;
 
     // Panel detail jika diklik
@@ -822,20 +890,22 @@ function renderParticipantsResult(result) {
 
     let detailHtml = '';
     if (state.mode === SplitMode.ITEMIZED && p.items && p.items.length > 0) {
-      detailHtml += `<div style="font-weight:700; margin-bottom:6px; color:var(--text-primary);">Pesanan:</div>`;
+      detailHtml += `<div style="font-weight:700; margin-bottom:8px; color:var(--text-primary);">Pesanan & Jatah Patungan:</div>`;
       p.items.forEach(it => {
-        const shareNote = it.isShared ? ` <span style="color:var(--text-tertiary);">(patungan ${it.shareCount} org)</span>` : '';
+        const shareHtml = it.isShared
+          ? `<div class="share-badge">Patungan ${it.shareCount} org ➔ Jatah kamu: ${formatIDR(it.userPortion)}</div>`
+          : `<span class="tabular-nums" style="font-weight:700;">${formatIDR(it.userPortion)}</span>`;
         detailHtml += `
-          <div class="detail-item-line">
-            <span>• ${escapeHtml(it.name)} (${it.qty}x)${shareNote}</span>
-            <span class="tabular-nums">${formatIDR(it.userPortion)}</span>
+          <div class="detail-item-line" style="align-items: center; justify-content: space-between; gap: 8px;">
+            <span>• ${escapeHtml(it.name)} (${it.qty}x)</span>
+            ${shareHtml}
           </div>
         `;
       });
     }
 
     // Detail Pajak & Service porsi orang ini
-    detailHtml += `<div style="font-weight:700; margin-top:10px; margin-bottom:6px; color:var(--text-primary);">Porsi Beban Biaya:</div>`;
+    detailHtml += `<div style="font-weight:700; margin-top:12px; margin-bottom:6px; color:var(--text-primary);">Porsi Biaya & Pajak Bersih:</div>`;
     detailHtml += `
       <div class="detail-item-line">
         <span>Subtotal Menu:</span>
@@ -863,6 +933,14 @@ function renderParticipantsResult(result) {
         <div class="detail-item-line" style="color:var(--accent-rose);">
           <span>Diskon:</span>
           <span class="tabular-nums">-${formatIDR(p.discountShare)}</span>
+        </div>
+      `;
+    }
+    if (p.exactFinalAmount && p.exactFinalAmount !== p.finalAmount) {
+      detailHtml += `
+        <div class="detail-item-line" style="color:var(--palette-lilac); font-style: italic; border-top: 1px dashed var(--border-subtle); margin-top: 8px; padding-top: 6px;">
+          <span>Sebelum Dibulatkan:</span>
+          <span class="tabular-nums">${formatIDR(p.exactFinalAmount)}</span>
         </div>
       `;
     }

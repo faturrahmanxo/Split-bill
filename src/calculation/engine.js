@@ -21,6 +21,7 @@ export const FeeType = {
  */
 export function calculateBill(input) {
   const mode = input.mode || SplitMode.EQUAL;
+  const roundingStep = Number(input.roundingStep) || 1;
   const participants = (input.participants || []).map((p, idx) => ({
     id: p.id || `p_${idx + 1}`,
     name: (p.name || `Peserta ${idx + 1}`).trim() || `Peserta ${idx + 1}`
@@ -34,10 +35,15 @@ export function calculateBill(input) {
   };
 
   if (mode === SplitMode.EQUAL) {
-    return calculateEqualSplit(input.subtotal || 0, participants, fees);
+    return calculateEqualSplit(input.subtotal || 0, participants, fees, roundingStep);
   } else {
-    return calculateItemizedSplit(input.items || [], participants, fees);
+    return calculateItemizedSplit(input.items || [], participants, fees, roundingStep);
   }
+}
+
+function applyRoundingStep(amount, step) {
+  if (!step || step <= 1) return Math.round(amount);
+  return Math.round(amount / step) * step;
 }
 
 function sanitizeFee(fee) {
@@ -112,7 +118,7 @@ export function computeGlobalFees(subtotal, fees) {
 /**
  * Mode 1: Bagi Rata (Equal Split)
  */
-function calculateEqualSplit(rawSubtotal, participants, fees) {
+function calculateEqualSplit(rawSubtotal, participants, fees, roundingStep = 1) {
   const global = computeGlobalFees(rawSubtotal, fees);
   const n = participants.length;
 
@@ -121,6 +127,9 @@ function calculateEqualSplit(rawSubtotal, participants, fees) {
       mode: SplitMode.EQUAL,
       valid: false,
       error: 'Jumlah peserta minimal 1 orang.',
+      roundingStep,
+      roundingDifference: 0,
+      sumCalculated: 0,
       ...global,
       participantResults: []
     };
@@ -140,7 +149,8 @@ function calculateEqualSplit(rawSubtotal, participants, fees) {
   const participantResults = participants.map((p, index) => {
     // Sisa pembulatan dialokasikan secara deterministik (+1 ke peserta awal)
     const extra = index < remainder ? 1 : 0;
-    const finalAmount = baseShare + extra;
+    const exactAmount = baseShare + extra;
+    const finalAmount = applyRoundingStep(exactAmount, roundingStep);
 
     return {
       id: p.id,
@@ -151,14 +161,21 @@ function calculateEqualSplit(rawSubtotal, participants, fees) {
       taxShare: baseTax,
       tipShare: baseTip,
       roundingAdjustment: extra,
+      exactFinalAmount: exactAmount,
       finalAmount,
       items: []
     };
   });
 
+  const sumCalculated = participantResults.reduce((acc, curr) => acc + curr.finalAmount, 0);
+  const roundingDifference = sumCalculated - F;
+
   return {
     mode: SplitMode.EQUAL,
     valid: true,
+    roundingStep,
+    roundingDifference,
+    sumCalculated,
     ...global,
     remainderDistributed: remainder,
     participantResults
@@ -168,7 +185,7 @@ function calculateEqualSplit(rawSubtotal, participants, fees) {
 /**
  * Mode 2: Berdasarkan Pesanan (Itemized Split)
  */
-function calculateItemizedSplit(items, participants, fees) {
+function calculateItemizedSplit(items, participants, fees, roundingStep = 1) {
   if (participants.length === 0) {
     return {
       mode: SplitMode.ITEMIZED,
@@ -176,6 +193,9 @@ function calculateItemizedSplit(items, participants, fees) {
       error: 'Tambahkan minimal 1 peserta untuk membagi pesanan.',
       subtotal: 0,
       finalTotal: 0,
+      roundingStep,
+      roundingDifference: 0,
+      sumCalculated: 0,
       participantResults: []
     };
   }
@@ -244,6 +264,7 @@ function calculateItemizedSplit(items, participants, fees) {
         taxShare: 0,
         tipShare: 0,
         roundingAdjustment: 0,
+        exactFinalAmount: 0,
         finalAmount: 0,
         items: []
       });
@@ -285,7 +306,8 @@ function calculateItemizedSplit(items, participants, fees) {
 
     rawAllocations.forEach((item, idx) => {
       const extra = bonusMap.has(idx) ? 1 : 0;
-      const finalAmount = item.floorTotal + extra;
+      const exactFinal = item.floorTotal + extra;
+      const finalAmount = applyRoundingStep(exactFinal, roundingStep);
 
       // Alokasi proporsional rincian komponen biaya
       const discountShare = Math.round(global.discountAmount * item.ratio);
@@ -302,16 +324,23 @@ function calculateItemizedSplit(items, participants, fees) {
         taxShare,
         tipShare,
         roundingAdjustment: extra,
+        exactFinalAmount: exactFinal,
         finalAmount,
         items: item.items
       });
     });
   }
 
+  const sumCalculated = participantResults.reduce((acc, curr) => acc + curr.finalAmount, 0);
+  const roundingDifference = sumCalculated - F;
+
   return {
     mode: SplitMode.ITEMIZED,
     valid: unassignedItemsCount === 0,
     unassignedItemsCount,
+    roundingStep,
+    roundingDifference,
+    sumCalculated,
     ...global,
     participantResults
   };

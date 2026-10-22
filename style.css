@@ -787,6 +787,134 @@ body {
   color: var(--palette-deep);
 }
 
+/* Rounding Options Pills */
+.rounding-pill-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .rounding-pill-group {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+.rounding-pill-btn {
+  background: var(--bg-surface-elevated);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all var(--transition-fast);
+}
+
+.rounding-pill-btn:hover {
+  border-color: var(--palette-orchid);
+  background: var(--bg-surface-hover);
+}
+
+.rounding-pill-btn.active {
+  background: linear-gradient(135deg, rgba(128, 93, 154, 0.4), rgba(75, 30, 101, 0.6));
+  border-color: var(--palette-lilac);
+  box-shadow: 0 0 12px rgba(197, 165, 219, 0.2);
+}
+
+[data-theme="light"] .rounding-pill-btn.active {
+  background: #f0e6f6;
+  border-color: #805d9a;
+}
+
+.rounding-pill-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.rounding-pill-btn.active .rounding-pill-title {
+  color: var(--palette-lilac);
+}
+
+[data-theme="light"] .rounding-pill-btn.active .rounding-pill-title {
+  color: var(--palette-deep);
+}
+
+.rounding-pill-sub {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.badge-pill {
+  background: var(--accent-secondary-bg);
+  border: 1px solid var(--border-subtle);
+  color: var(--palette-lilac);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+}
+
+[data-theme="light"] .badge-pill {
+  color: var(--palette-deep);
+}
+
+.badge-total-hint {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(110, 231, 183, 0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(110, 231, 183, 0.3);
+}
+
+[data-theme="light"] .badge-total-hint {
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.participant-amount-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.participant-amount-badge {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6ee7b7;
+}
+
+[data-theme="light"] .participant-amount-badge {
+  color: #059669;
+}
+
+.share-badge {
+  display: inline-block;
+  background: rgba(197, 165, 219, 0.15);
+  color: var(--palette-lilac);
+  border: 1px solid var(--border-subtle);
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+[data-theme="light"] .share-badge {
+  color: var(--palette-deep);
+  background: rgba(128, 93, 154, 0.1);
+}
+
 /* Calculation Results Card (Hero Total) - Ultra High Contrast */
 .hero-total-card {
   background: linear-gradient(135deg, #3d1455, #220832);

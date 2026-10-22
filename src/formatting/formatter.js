@@ -86,29 +86,46 @@ export function generateShareText(result, session) {
     text += `• Tip: +${formatIDR(result.tipAmount)}\n`;
   }
 
-  text += `---------------------------------\n`;
-  text += `TOTAL AKHIR: ${formatIDR(result.finalTotal)}\n\n`;
+  if (result.roundingStep && result.roundingStep > 1) {
+    const roundingLabel = result.roundingStep === 100 ? 'Ratusan (Rp 100)' : 'Ribuan (Rp 1.000)';
+    text += `• Opsi Pembulatan: ${roundingLabel}\n`;
+  }
 
-  text += `RINCIAN PER ORANG:\n`;
+  text += `---------------------------------\n`;
+  text += `TOTAL STRUK: ${formatIDR(result.finalTotal)}\n\n`;
+
+  text += `RINCIAN YANG HARUS DIBAYAR:\n`;
+  text += `(Nominal di samping nama adalah TOTAL BERSIH yang harus ditransfer)\n\n`;
 
   result.participantResults.forEach((p, idx) => {
-    text += `${idx + 1}. ${p.name} -> ${formatIDR(p.finalAmount)}\n`;
+    text += `${idx + 1}. *${p.name}* ➔ *${formatIDR(p.finalAmount)}* (Total Bayar)\n`;
 
     if (session.mode === 'ITEMIZED' && p.items && p.items.length > 0) {
       p.items.forEach(item => {
-        const sharedNote = item.isShared ? ` (patungan ${item.shareCount} orang)` : '';
-        text += `   - ${item.name} (${item.qty}x)${sharedNote}: ${formatIDR(item.userPortion)}\n`;
+        if (item.isShared) {
+          text += `   - ${item.name} (${item.qty}x) (patungan ${item.shareCount} org, jatah kamu: ${formatIDR(item.userPortion)})\n`;
+        } else {
+          text += `   - ${item.name} (${item.qty}x): ${formatIDR(item.userPortion)}\n`;
+        }
       });
       const extraFees = (p.serviceShare || 0) + (p.taxShare || 0) + (p.tipShare || 0) - (p.discountShare || 0);
       if (extraFees !== 0) {
         const sign = extraFees > 0 ? '+' : '';
-        text += `   - Biaya & Pajak Bersih: ${sign}${formatIDR(extraFees)}\n`;
+        text += `   - Biaya & Pajak Proporsional: ${sign}${formatIDR(extraFees)}\n`;
       }
     }
   });
 
   const sumCheck = result.participantResults.reduce((acc, curr) => acc + curr.finalAmount, 0);
-  text += `\nTotal Akumulasi: ${formatIDR(sumCheck)} (Pas 100%)\n`;
+  const diff = sumCheck - result.finalTotal;
+
+  if (diff === 0) {
+    text += `\nTotal Akumulasi: ${formatIDR(sumCheck)} (Pas 100%)\n`;
+  } else if (diff > 0) {
+    text += `\nTotal Akumulasi: ${formatIDR(sumCheck)} (Dibulatkan, selisih: +${formatIDR(diff)})\n`;
+  } else {
+    text += `\nTotal Akumulasi: ${formatIDR(sumCheck)} (Dibulatkan, selisih: -${formatIDR(Math.abs(diff))})\n`;
+  }
 
   if (session.paymentInfo && (session.paymentInfo.accountNumber || session.paymentInfo.bankName)) {
     const bank = session.paymentInfo.bankName ? `${session.paymentInfo.bankName} ` : '';

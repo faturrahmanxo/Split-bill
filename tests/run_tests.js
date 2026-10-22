@@ -141,6 +141,53 @@ console.log('\n📌 Skenario 6: Validasi Edge Cases');
   assert(v.errors.some(e => e.field === 'subtotal'), 'Error subtotal terdeteksi');
 }
 
+// ==========================================
+// TEST-007: Opsi Pembulatan Praktis (100 & 1000)
+// ==========================================
+console.log('\n📌 Skenario 7: Opsi Pembulatan Praktis (Ratusan & Ribuan)');
+{
+  const inputEqual = {
+    mode: SplitMode.EQUAL,
+    subtotal: 100000,
+    participants: [
+      { id: 'p1', name: 'A' },
+      { id: 'p2', name: 'B' },
+      { id: 'p3', name: 'C' }
+    ],
+    fees: {},
+    roundingStep: 100
+  };
+  const res100 = calculateBill(inputEqual);
+  assert(res100.participantResults.every(p => p.finalAmount === 33300), 'Masing-masing dibulatkan ke Rp 33.300');
+  assert(res100.roundingDifference === -100, 'Selisih pembulatan -Rp 100');
+
+  const input1000 = {
+    ...inputEqual,
+    roundingStep: 1000
+  };
+  const res1000 = calculateBill(input1000);
+  assert(res1000.participantResults.every(p => p.finalAmount === 33000), 'Masing-masing dibulatkan ke Rp 33.000');
+  assert(res1000.roundingDifference === -1000, 'Selisih pembulatan -Rp 1.000');
+}
+
+// ==========================================
+// TEST-008: Format Teks WhatsApp yang Jelas
+// ==========================================
+console.log('\n📌 Skenario 8: Kejelasan Teks WhatsApp');
+{
+  const input = {
+    mode: SplitMode.ITEMIZED,
+    participants: [{ id: 'p1', name: 'Budi' }],
+    items: [{ id: 'i1', name: 'Nasi Goreng', price: 25000, qty: 1, participantIds: ['p1'] }],
+    fees: {}
+  };
+  const res = calculateBill(input);
+  const text = generateShareText(res, input);
+  assert(text.includes('RINCIAN YANG HARUS DIBAYAR:'), 'Header rincian jelas');
+  assert(text.includes('Total Bayar'), 'Label Total Bayar per orang tertera');
+  assert(text.includes('TOTAL BERSIH'), 'Penjelasan total bersih tertera');
+}
+
 console.log(`\n========================================`);
 console.log(`HASIL: ${passedTests}/${totalTests} TESTS BERHASIL!`);
 console.log(`========================================\n`);
