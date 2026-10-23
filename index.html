@@ -342,7 +342,7 @@
           </div>
         </section>
 
-        <!-- SECTION 5: Info Rekening Pembayaran Host (Opsional) -->
+        <!-- SECTION 5: Info Rekening & E-Wallet Pembayaran (Opsional) -->
         <section class="card">
           <div class="card-header">
             <h2 class="card-title">
@@ -350,24 +350,38 @@
                 <rect width="20" height="14" x="2" y="5" rx="2"/>
                 <line x1="2" x2="22" y1="10" y2="10"/>
               </svg>
-              <span>Info Rekening Pembayaran (Opsional)</span>
+              <span>Info Rekening & E-Wallet (Opsional)</span>
             </h2>
           </div>
+          
           <div class="form-group">
+            <!-- Quick E-Wallet / Bank Presets -->
+            <div class="presets-row" style="margin-bottom: 10px;">
+              <span class="preset-label" style="font-size: 11px; color: var(--text-tertiary);">Pilih Cepat:</span>
+              <button class="preset-chip payment-preset-btn" type="button" data-bank="DANA">DANA</button>
+              <button class="preset-chip payment-preset-btn" type="button" data-bank="GoPay">GoPay</button>
+              <button class="preset-chip payment-preset-btn" type="button" data-bank="BTN">Bank BTN</button>
+              <button class="preset-chip payment-preset-btn" type="button" data-bank="BCA">BCA</button>
+              <button class="preset-chip payment-preset-btn" type="button" data-bank="OVO">OVO</button>
+              <button class="preset-chip payment-preset-btn" type="button" data-bank="ShopeePay">ShopeePay</button>
+              <button class="preset-chip payment-preset-btn" type="button" data-bank="Mandiri">Mandiri</button>
+            </div>
+
             <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 10px; margin-bottom: 12px;">
               <div>
                 <label class="form-label" for="paymentBankInput">Bank / E-Wallet</label>
-                <input id="paymentBankInput" class="input-text" type="text" placeholder="BCA / GoPay / Dana...">
+                <input id="paymentBankInput" class="input-text" type="text" placeholder="BCA / GoPay / DANA...">
               </div>
               <div>
                 <label class="form-label" for="paymentAccountInput">Nomor Rekening / No HP</label>
-                <input id="paymentAccountInput" class="input-text tabular-nums" type="text" inputmode="numeric" placeholder="Contoh: 1234567890">
+                <input id="paymentAccountInput" class="input-text tabular-nums" type="text" inputmode="numeric" placeholder="Contoh: 08123456789">
               </div>
             </div>
-            <div>
+            <div style="margin-bottom: 16px;">
               <label class="form-label" for="paymentHolderInput">Atas Nama (A/N)</label>
               <input id="paymentHolderInput" class="input-text" type="text" placeholder="Contoh: Faturrahman">
             </div>
+
           </div>
         </section>
       </div>
@@ -386,6 +400,15 @@
             <span>Total Pembayaran Akhir</span>
           </div>
           <div id="finalTotalDisplay" class="total-amount-display tabular-nums">Rp 0</div>
+          
+          <button id="btnHeroPaymentTotal" class="btn-qris-hero" type="button" title="Bayar langsung total tagihan via E-Wallet atau Mobile Banking">
+            <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            <span>Bayar Total (1-Tap Deep Link)</span>
+          </button>
           
           <div class="breakdown-summary">
             <div class="breakdown-row">
@@ -499,6 +522,106 @@
         </button>
       </div>
     </footer>
+
+    <!-- Payment & Deep Link Modal Dialog -->
+    <div id="paymentModal" class="modal-backdrop" aria-hidden="true" style="display: none;">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-header-title-wrap">
+            <span class="qris-brand-pill">1-TAP DEEP LINK</span>
+            <h3 id="paymentModalTitle" class="modal-title">Bayar Langsung</h3>
+          </div>
+          <button id="paymentModalCloseBtn" class="btn-icon" aria-label="Tutup Modal" type="button">
+            <svg class="icon-svg icon-md" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="qris-nominal-box">
+            <span id="paymentTargetPerson" class="qris-nominal-label">Total Yang Harus Ditransfer:</span>
+            <div id="paymentModalAmount" class="qris-nominal-val tabular-nums">Rp 0</div>
+            
+            <div id="modalRecipientBox" class="modal-recipient-card">
+              <div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 2px;">Tujuan Transfer:</div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div>
+                  <strong id="modalRecipientBank" style="color: var(--primary);">DANA</strong>
+                  <span id="modalRecipientAcc" class="tabular-nums" style="margin-left: 4px; font-weight: 700;">08123456789</span>
+                  <span id="modalRecipientName" style="color: var(--text-secondary); font-size: 11px; display: block;">a/n Faturrahman</span>
+                </div>
+                <button id="btnCopyRecipientAcc" class="btn-copy-p-chip" type="button" title="Salin nomor rekening">
+                  Salin No.
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="modalDeepLinkSection" class="modal-section-content" style="width: 100%;">
+            <div style="text-align: center; margin-bottom: 12px;">
+              <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">
+                Pilih aplikasi di bawah untuk bayar langsung:
+              </span>
+              <p style="font-size: 11px; color: var(--text-tertiary); margin: 3px 0 0;">
+                Nominal & nomor rekening akan <strong>otomatis disalin</strong> saat aplikasi dibuka.
+              </p>
+            </div>
+
+            <div class="deeplink-grid">
+              <!-- E-Wallets -->
+              <button class="deeplink-btn" type="button" data-app="DANA">
+                <span class="dl-badge-icon" style="background: #118eea;">D</span>
+                <span class="dl-name">Buka DANA</span>
+                <span class="dl-sub">Auto-Transfer</span>
+              </button>
+              <button class="deeplink-btn" type="button" data-app="GOPAY">
+                <span class="dl-badge-icon" style="background: #00aa13;">G</span>
+                <span class="dl-name">Buka GoPay</span>
+                <span class="dl-sub">App Gojek</span>
+              </button>
+              <button class="deeplink-btn" type="button" data-app="OVO">
+                <span class="dl-badge-icon" style="background: #4c3494;">O</span>
+                <span class="dl-name">Buka OVO</span>
+                <span class="dl-sub">App OVO</span>
+              </button>
+              <button class="deeplink-btn" type="button" data-app="SHOPEEPAY">
+                <span class="dl-badge-icon" style="background: #ee4d2d;">S</span>
+                <span class="dl-name">ShopeePay</span>
+                <span class="dl-sub">App Shopee</span>
+              </button>
+
+              <!-- Mobile Banking -->
+              <button class="deeplink-btn" type="button" data-app="BTN">
+                <span class="dl-badge-icon" style="background: #0a3b8b;">BTN</span>
+                <span class="dl-name">BTN Mobile</span>
+                <span class="dl-sub">App Bank BTN</span>
+              </button>
+              <button class="deeplink-btn" type="button" data-app="BCA">
+                <span class="dl-badge-icon" style="background: #005eaa;">BCA</span>
+                <span class="dl-name">BCA Mobile</span>
+                <span class="dl-sub">App BCA</span>
+              </button>
+              <button class="deeplink-btn" type="button" data-app="MANDIRI">
+                <span class="dl-badge-icon" style="background: #002d62;">Livin</span>
+                <span class="dl-name">Livin Mandiri</span>
+                <span class="dl-sub">App Mandiri</span>
+              </button>
+              <button class="deeplink-btn" type="button" data-app="BRI">
+                <span class="dl-badge-icon" style="background: #00529c;">BRI</span>
+                <span class="dl-name">BRImo</span>
+                <span class="dl-sub">App BRI</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btnCopyAmountModal" class="btn-primary" type="button" style="flex: 1;">
+            <svg class="icon-svg icon-md" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            <span>Salin Nominal Pas</span>
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container" aria-live="polite"></div>

@@ -12,6 +12,7 @@ const MIME_TYPES = {
   '.html': 'text/html; charset=UTF-8',
   '.css': 'text/css; charset=UTF-8',
   '.js': 'application/javascript; charset=UTF-8',
+  '.mjs': 'application/javascript; charset=UTF-8',
   '.json': 'application/json',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',

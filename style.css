@@ -1451,3 +1451,472 @@ body {
     transform: translateX(100%);
   }
 }
+
+/* ==========================================================================
+   QRIS Generator & Payment Modal Components
+   ========================================================================== */
+
+/* Hero QRIS Button */
+.btn-qris-hero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 14px;
+  margin-bottom: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(197, 165, 219, 0.15), rgba(128, 93, 154, 0.25));
+  border: 1px solid rgba(197, 165, 219, 0.35);
+  border-radius: var(--radius-md);
+  color: var(--primary);
+  font-family: var(--font-main);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-qris-hero:hover {
+  background: linear-gradient(135deg, rgba(197, 165, 219, 0.25), rgba(128, 93, 154, 0.4));
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(197, 165, 219, 0.2);
+}
+
+/* QRIS Setup Card (Section 5) */
+.qris-setup-card {
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-top: 4px;
+}
+
+.qris-setup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.qris-setup-badge {
+  background: rgba(197, 165, 219, 0.2);
+  color: var(--palette-lilac);
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  letter-spacing: 0.5px;
+}
+
+.qris-status-inactive {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+
+.qris-status-active {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-success);
+  background: rgba(110, 231, 183, 0.15);
+  border: 1px solid rgba(110, 231, 183, 0.3);
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+
+.qris-action-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-outline-qris {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-main);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-outline-qris:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+/* Participant Card QRIS Quick Buttons */
+.participant-actions-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.btn-qris-p-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(197, 165, 219, 0.12);
+  border: 1px solid rgba(197, 165, 219, 0.28);
+  border-radius: var(--radius-sm);
+  color: var(--palette-lilac);
+  font-family: var(--font-main);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-qris-p-chip:hover {
+  background: rgba(197, 165, 219, 0.24);
+  border-color: var(--primary);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-copy-p-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  font-family: var(--font-main);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-copy-p-chip:hover {
+  border-color: var(--palette-lilac);
+  color: var(--text-primary);
+}
+
+/* ==========================================
+   Modal Dialog QRIS
+   ========================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 4, 23, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-dialog {
+  background: var(--bg-surface);
+  border: 1px solid rgba(197, 165, 219, 0.3);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(197, 165, 219, 0.15);
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: modalPopUp 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPopUp {
+  from { transform: scale(0.92) translateY(12px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-header-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.qris-brand-pill {
+  background: linear-gradient(135deg, #4b1e65, #805d9a);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(197, 165, 219, 0.3);
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.qris-nominal-box {
+  width: 100%;
+  background: rgba(197, 165, 219, 0.08);
+  border: 1px solid rgba(197, 165, 219, 0.2);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  text-align: center;
+}
+
+.qris-nominal-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.qris-nominal-val {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--accent-success);
+  letter-spacing: -0.5px;
+}
+
+.qris-nominal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--palette-lilac);
+}
+
+/* Kartu QRIS Bergaya Nasional (White Clean Receipt Card) */
+.qris-card-container {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  width: 100%;
+  max-width: 290px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #1a1a1a;
+}
+
+.qris-card-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 8px;
+}
+
+.qris-merchant-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: #333333;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qris-canvas-box {
+  background: #ffffff;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qris-canvas-element {
+  width: 220px !important;
+  height: 220px !important;
+  image-rendering: pixelated;
+}
+
+.qris-card-bottom {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px dashed #e0e0e0;
+  padding-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #777777;
+}
+
+.qris-supported-wallets {
+  text-align: center;
+  width: 100%;
+}
+
+.wallet-tags-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.w-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 2px 8px;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Modal Tab Switcher */
+.modal-tab-nav {
+  display: flex;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 4px 12px 0;
+  gap: 4px;
+}
+
+.modal-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-tertiary);
+  font-family: var(--font-main);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.modal-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.modal-tab-btn:hover:not(.active) {
+  color: var(--text-secondary);
+}
+
+/* Modal Recipient Card */
+.modal-recipient-card {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed rgba(197, 165, 219, 0.3);
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+/* Deep Link App Grid */
+.deeplink-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+.deeplink-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-fast);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+}
+
+.deeplink-btn:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.dl-badge-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.dl-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.dl-sub {
+  display: block;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+

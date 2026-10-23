@@ -1,0 +1,10 @@
+{
+  "name": "split-bill",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Kalkulator Split Bill & Pajak Restoran Cepat & Akurat",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/run_tests.js"
+  }
+}
