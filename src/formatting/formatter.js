@@ -2,7 +2,6 @@
  * SplitBill Formatter Module
  * Format Rupiah konsisten (IDR) & Generator Teks Ringkasan WhatsApp / Clipboard (Clean tanpa emoji).
  */
-import { getPaymentDeepLink } from '../deeplink/deeplinkHelper.js';
 /**
  * Format integer uang ke format Rupiah standar Indonesia.
  * Contoh: 150000 -> "Rp 150.000"
@@ -147,11 +146,6 @@ export function generateShareText(result, session) {
     }
     if (payment.accountHolder) {
       text += `• Atas Nama: *${payment.accountHolder}*\n`;
-    }
-    // Deep Link langsung ke aplikasi E-Wallet / Mobile Banking
-    if (payment.bankName) {
-      const deepLink = getPaymentDeepLink(payment.bankName, payment.accountNumber, result.finalTotal);
-      text += `🚀 *Buka Aplikasi:* ${deepLink}\n`;
     }
   }
 

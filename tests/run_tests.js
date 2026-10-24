@@ -189,24 +189,7 @@ console.log('\n📌 Skenario 8: Kejelasan Teks WhatsApp');
   assert(text.includes('RINGKASAN STRUK:'), 'Header ringkasan struk jelas');
 }
 
-// ==========================================
-// TEST-009: 1-Tap Deep Link Payment Engine
-// ==========================================
-console.log('\n📌 Skenario 9: 1-Tap Deep Link Payment Engine');
-{
-  const { PAYMENT_APPS, getPaymentDeepLink } = await import('../src/deeplink/deeplinkHelper.js');
-  
-  assert(PAYMENT_APPS.DANA !== undefined, 'Preset DANA tersedia');
-  assert(PAYMENT_APPS.BTN !== undefined, 'Preset BTN Mobile tersedia');
-  assert(PAYMENT_APPS.BCA !== undefined, 'Preset BCA Mobile tersedia');
-  assert(PAYMENT_APPS.MANDIRI !== undefined, 'Preset Livin Mandiri tersedia');
 
-  const danaLink = getPaymentDeepLink('DANA', '08123456789', 50000);
-  assert(danaLink.includes('link.dana.id'), 'Deep link DANA menggunakan Universal Link link.dana.id');
-
-  const btnLink = getPaymentDeepLink('BTN', '1234567890', 75000);
-  assert(btnLink.startsWith('btnmobile://'), 'Deep link BTN Mobile menggunakan skema URI btnmobile://');
-}
 
 console.log(`\n========================================`);
 console.log(`HASIL: ${passedTests}/${totalTests} TESTS BERHASIL!`);

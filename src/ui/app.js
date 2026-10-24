@@ -7,7 +7,6 @@
 import { calculateBill, SplitMode, FeeType } from '../calculation/engine.js';
 import { validateInput } from '../validation/validator.js';
 import { formatIDR, parseIDR, generateShareText } from '../formatting/formatter.js';
-import { PAYMENT_APPS, detectPaymentApp, getPaymentDeepLink } from '../deeplink/deeplinkHelper.js';
 
 // State Aplikasi
 const state = {
@@ -106,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initPaymentControls();
   initActionButtons();
   initCollapsible();
-  initPaymentModal();
   
   // Sinkronkan nilai UI yang dimuat dari storage
   syncLoadedStateToUI();
@@ -885,51 +883,13 @@ function renderParticipantsResult(result) {
     header.innerHTML = `
       <div class="participant-info">
         <div class="participant-avatar" style="width:30px; height:30px; font-size:12px;">${p.name.charAt(0).toUpperCase()}</div>
-        <div style="display:flex; flex-direction:column;">
-          <span class="participant-name-text">${escapeHtml(p.name)}</span>
-          <div class="participant-actions-wrap">
-            <button class="btn-qris-p-chip" type="button" title="Bayar langsung via deep link untuk ${escapeHtml(p.name)}">
-              <svg class="icon-svg icon-xs" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              <span>Bayar Langsung</span>
-            </button>
-            <button class="btn-copy-p-chip" type="button" title="Salin nominal ${formatIDR(p.finalAmount)}">
-              <span>Salin</span>
-            </button>
-          </div>
-        </div>
+        <span class="participant-name-text">${escapeHtml(p.name)}</span>
       </div>
       <div class="participant-amount-col">
         <div class="participant-amount-badge">Total Bayar</div>
         <div class="participant-amount-text tabular-nums">${formatIDR(p.finalAmount)}</div>
       </div>
     `;
-
-    // Pasang event listener untuk tombol aksi Bayar Langsung & Salin
-    const btnPay = header.querySelector('.btn-qris-p-chip');
-    if (btnPay) {
-      btnPay.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openPaymentModal({
-          title: `Bayar Langsung — ${p.name}`,
-          targetPerson: `Jatah: ${p.name}`,
-          amount: p.finalAmount
-        });
-      });
-    }
-
-    const btnCopy = header.querySelector('.btn-copy-p-chip');
-    if (btnCopy) {
-      btnCopy.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const amtClean = p.finalAmount.toString();
-        try {
-          await navigator.clipboard.writeText(amtClean);
-          showToast(`Nominal ${formatIDR(p.finalAmount)} untuk ${p.name} disalin`);
-        } catch {
-          fallbackCopyText(amtClean);
-        }
-      });
-    }
 
     // Panel detail jika diklik
     const detailPanel = document.createElement('div');
@@ -1006,129 +966,7 @@ function renderParticipantsResult(result) {
   });
 }
 
-// ==========================================
-// 8. Payment Modal Controller & Deep Link Launcher
-// ==========================================
-let currentModalPaymentData = null;
 
-function initPaymentModal() {
-  const modal = document.getElementById('paymentModal');
-  const closeBtn = document.getElementById('paymentModalCloseBtn');
-  const btnCopyAmount = document.getElementById('btnCopyAmountModal');
-  const btnCopyAcc = document.getElementById('btnCopyRecipientAcc');
-
-  // Deep Link App Buttons
-  document.querySelectorAll('.deeplink-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if (!currentModalPaymentData) return;
-      const appKey = btn.dataset.app;
-      const app = PAYMENT_APPS[appKey] || PAYMENT_APPS.DANA;
-      const acc = state.paymentInfo?.accountNumber || '';
-      const amt = currentModalPaymentData.amount;
-
-      // 1. Otomatis salin nomor rekening & nominal ke clipboard
-      try {
-        await navigator.clipboard.writeText(acc || amt.toString());
-      } catch {
-        fallbackCopyText(acc || amt.toString());
-      }
-
-      showToast(`No. Rekening (${acc}) & Nominal disalin! Membuka ${app.name}...`);
-
-      // 2. Luncurkan Deep Link ke aplikasi di HP
-      const deepUrl = app.makeUrl(acc, amt);
-      setTimeout(() => {
-        window.location.href = deepUrl;
-      }, 350);
-    });
-  });
-
-  // Salin No Rekening di dalam modal
-  if (btnCopyAcc) {
-    btnCopyAcc.addEventListener('click', async () => {
-      const acc = state.paymentInfo?.accountNumber || '';
-      if (!acc) return;
-      try {
-        await navigator.clipboard.writeText(acc);
-        showToast(`Nomor rekening ${acc} disalin`);
-      } catch {
-        fallbackCopyText(acc);
-      }
-    });
-  }
-
-  if (closeBtn && modal) {
-    closeBtn.addEventListener('click', () => {
-      modal.style.display = 'none';
-      modal.setAttribute('aria-hidden', 'true');
-    });
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        modal.style.display = 'none';
-        modal.setAttribute('aria-hidden', 'true');
-      }
-    });
-  }
-
-  if (btnCopyAmount) {
-    btnCopyAmount.addEventListener('click', async () => {
-      if (!currentModalPaymentData) return;
-      const amtStr = currentModalPaymentData.amount.toString();
-      try {
-        await navigator.clipboard.writeText(amtStr);
-        showToast(`Nominal ${formatIDR(currentModalPaymentData.amount)} disalin`);
-      } catch {
-        fallbackCopyText(amtStr);
-      }
-    });
-  }
-
-  // Hero Payment Total button
-  const heroPayBtn = document.getElementById('btnHeroPaymentTotal');
-  if (heroPayBtn) {
-    heroPayBtn.addEventListener('click', () => {
-      const total = state.lastCalculationResult?.finalTotal || 0;
-      openPaymentModal({
-        title: 'Bayar Total Tagihan',
-        targetPerson: 'Total Seluruh Tagihan',
-        amount: total
-      });
-    });
-  }
-}
-
-function openPaymentModal({ title, targetPerson, amount }) {
-  const modal = document.getElementById('paymentModal');
-  const modalTitle = document.getElementById('paymentModalTitle');
-  const modalAmount = document.getElementById('paymentModalAmount');
-  const targetLabel = document.getElementById('paymentTargetPerson');
-
-  // Recipient elements in modal
-  const recBank = document.getElementById('modalRecipientBank');
-  const recAcc = document.getElementById('modalRecipientAcc');
-  const recName = document.getElementById('modalRecipientName');
-
-  if (!modal) return;
-
-  const numericAmount = Math.max(0, Math.round(Number(amount) || 0));
-
-  currentModalPaymentData = {
-    title,
-    targetPerson,
-    amount: numericAmount
-  };
-
-  if (modalTitle) modalTitle.textContent = title || 'Bayar Langsung';
-  if (targetLabel) targetLabel.textContent = targetPerson || 'Total Yang Harus Ditransfer:';
-  if (modalAmount) modalAmount.textContent = formatIDR(numericAmount);
-
-  if (recBank) recBank.textContent = state.paymentInfo?.bankName || 'E-Wallet / Bank';
-  if (recAcc) recAcc.textContent = state.paymentInfo?.accountNumber || '(Belum diisi)';
-  if (recName) recName.textContent = state.paymentInfo?.accountHolder ? `a/n ${state.paymentInfo.accountHolder}` : '';
-
-  modal.style.display = 'flex';
-  modal.setAttribute('aria-hidden', 'false');
-}
 
 function escapeHtml(str) {
   if (!str) return '';
