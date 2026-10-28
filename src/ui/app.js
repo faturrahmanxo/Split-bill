@@ -97,6 +97,7 @@ const SVG_ICONS = {
 document.addEventListener('DOMContentLoaded', () => {
   loadFromStorage();
   initTheme();
+  initLandingNavigation();
   initModeSwitcher();
   initEqualModeControls();
   initItemizedModeControls();
@@ -141,6 +142,97 @@ function initPreloader() {
     window.addEventListener('load', dismiss, { once: true });
   }
 }
+
+// ==========================================
+// 0b. Tampilan Awal (Landing View) Navigation
+// ==========================================
+function navigateToView(viewName, scroll = true) {
+  state.currentView = viewName;
+  const landing = document.getElementById('landingView');
+  const calc = document.getElementById('calculatorView');
+  const resetBtn = document.getElementById('resetSessionBtn');
+
+  if (viewName === 'calculator') {
+    document.body.classList.remove('is-landing');
+    if (landing) landing.style.display = 'none';
+    if (calc) {
+      calc.style.display = 'block';
+    }
+    if (resetBtn) resetBtn.style.display = 'inline-flex';
+    if (window.location.hash !== '#kalkulator') {
+      window.location.hash = '#kalkulator';
+    }
+    if (scroll) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  } else {
+    document.body.classList.add('is-landing');
+    if (calc) calc.style.display = 'none';
+    if (landing) {
+      landing.style.display = 'flex';
+    }
+    if (resetBtn) resetBtn.style.display = 'none';
+    if (window.location.hash === '#kalkulator') {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+    if (scroll) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+}
+
+function initLandingNavigation() {
+  // Satu-satunya tombol Mulai di tengah
+  const heroBtnStart = document.getElementById('heroBtnStart');
+  if (heroBtnStart) {
+    heroBtnStart.addEventListener('click', () => {
+      navigateToView('calculator');
+    });
+  }
+
+  // Klik Brand Logo SplitBill untuk kembali ke Beranda
+  const brandLogoBtn = document.getElementById('brandLogoBtn');
+  if (brandLogoBtn) {
+    brandLogoBtn.addEventListener('click', () => {
+      navigateToView('landing');
+    });
+    brandLogoBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        navigateToView('landing');
+      }
+    });
+  }
+
+  // Tombol "Kembali ke Beranda" di atas form kalkulator
+  const btnBackToHome = document.getElementById('btnBackToHome');
+  if (btnBackToHome) {
+    btnBackToHome.addEventListener('click', () => {
+      navigateToView('landing');
+    });
+  }
+
+  // Deteksi Hash URL saat pertama kali load atau navigasi back/forward
+  window.addEventListener('hashchange', () => {
+    if (window.location.hash === '#kalkulator') {
+      if (state.currentView !== 'calculator') {
+        navigateToView('calculator', false);
+      }
+    } else {
+      if (state.currentView !== 'landing') {
+        navigateToView('landing', false);
+      }
+    }
+  });
+
+  // Tampilan awal default: Landing View kecuali ada hash #kalkulator
+  if (window.location.hash === '#kalkulator') {
+    navigateToView('calculator', false);
+  } else {
+    navigateToView('landing', false);
+  }
+}
+
 
 // ==========================================
 // 1. Theme Management (Dark / Light)

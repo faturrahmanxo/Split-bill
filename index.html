@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SplitBill.id — Kalkulator Patungan & Pajak Restoran Cepat & Akurat</title>
-  <meta name="description" content="Aplikasi hitung patungan dan split bill restoran gratis tanpa login. Mendukung bagi rata dan per pesanan, hitung otomatis pajak PB1 10%, service charge, diskon, dan tip dengan pembulatan presisi.">
+  <title>SplitBill.id — Kalkulator Patungan &amp; Biaya Bersama Cepat &amp; Akurat</title>
+  <meta name="description" content="Aplikasi hitung patungan dan split bill serbaguna gratis tanpa login. Mendukung bagi rata dan per item, hitung otomatis pajak, service charge, diskon, dan tip dengan pembulatan presisi.">
   <meta name="theme-color" content="#1d0929">
   
   <!-- Google Fonts: Plus Jakarta Sans -->
@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=1.4">
 <body>
   <!-- Smooth Aesthetic Preloader Screen -->
   <div id="appPreloader" class="app-preloader" aria-hidden="true">
@@ -43,7 +43,7 @@
     
     <!-- Header -->
     <header class="app-header">
-      <div class="brand-wrapper">
+      <div class="brand-wrapper" id="brandLogoBtn" role="button" tabindex="0" title="Ke Beranda SplitBill">
         <div class="brand-icon">
           <svg class="icon-svg icon-lg" viewBox="0 0 24 24">
             <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>
@@ -54,7 +54,7 @@
         </div>
         <div>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <h1 class="brand-title">SplitBill</h1>
+            <span class="brand-title">SplitBill</span>
             <span class="brand-badge">V1.0</span>
           </div>
         </div>
@@ -75,7 +75,7 @@
             </svg>
           </span>
         </button>
-        <button id="resetSessionBtn" class="btn-icon" aria-label="Reset Tagihan" title="Reset Tagihan">
+        <button id="resetSessionBtn" class="btn-icon" aria-label="Reset Tagihan" title="Reset Tagihan" style="display: none;">
           <svg class="icon-svg icon-md" viewBox="0 0 24 24">
             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
             <path d="M3 3v5h5"/>
@@ -84,8 +84,124 @@
       </div>
     </header>
 
-    <!-- Main Responsive Dashboard Grid -->
-    <main class="dashboard-grid">
+    <!-- TAMPILAN AWAL / HERO LANDING VIEW (INSPIRASI REF: LIVELY, STICKER HIGHLIGHT, ICONIC MINI-CARDS) -->
+    <section id="landingView" class="landing-view">
+      <div class="hero-container-ref">
+        <div class="hero-glow-orb"></div>
+        
+        <!-- Eyebrow Badge Pill -->
+        <div class="hero-ref-badge">
+          <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          <span>Kalkulator Patungan Serbaguna &bull; v1.0</span>
+        </div>
+
+        <!-- Big Catchy Title with Vibrant Sticker Pill -->
+        <h1 class="hero-ref-title">
+          <span class="hero-title-top">Bagi Tagihan Bareng</span>
+          <span class="hero-sticker-pill">Praktis &amp; Adil</span>
+          <span class="hero-title-bot">Tanpa Drama.</span>
+        </h1>
+
+        <!-- Short Tagline -->
+        <p class="hero-ref-tagline">
+          Hitung split bill belanja, liburan, sewa, langganan, atau nongkrong otomatis tanpa selisih rupiah.
+        </p>
+
+        <!-- Single Central CTA Button & Stat Pill -->
+        <div class="hero-ref-cta-group">
+          <button id="heroBtnStart" class="btn-primary hero-ref-btn" type="button">
+            <span>Mulai Hitung Tagihan</span>
+            <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+              <path d="M5 12h14"/>
+              <path d="m12 5 7 7-7 7"/>
+            </svg>
+          </button>
+          
+          <div class="hero-ref-stat-pill">
+            <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+            <span>100% Gratis &bull; Tanpa Registrasi</span>
+          </div>
+        </div>
+
+        <!-- 4 Ref Feature Mini-Cards (Icon on Top, Bold Title, Mini Desc) -->
+        <div class="hero-ref-cards-grid">
+          <div class="ref-feature-card">
+            <div class="ref-card-icon">
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <h4 class="ref-card-title">Bagi Rata Cepat</h4>
+            <p class="ref-card-desc">Bagi rata instan 1 klik</p>
+          </div>
+
+          <div class="ref-feature-card">
+            <div class="ref-card-icon">
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+                <rect width="18" height="18" x="3" y="3" rx="2"/>
+                <path d="M3 9h18"/>
+                <path d="M9 21V9"/>
+              </svg>
+            </div>
+            <h4 class="ref-card-title">Per Item Pesanan</h4>
+            <p class="ref-card-desc">Rincian belanja per orang</p>
+          </div>
+
+          <div class="ref-feature-card">
+            <div class="ref-card-icon">
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+                <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+                <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+                <path d="M7 21h10"/>
+                <path d="M12 3v18"/>
+                <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>
+              </svg>
+            </div>
+            <h4 class="ref-card-title">Pajak &amp; Diskon Adil</h4>
+            <p class="ref-card-desc">Proporsional tanpa selisih</p>
+          </div>
+
+          <div class="ref-feature-card">
+            <div class="ref-card-icon">
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
+                <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
+              </svg>
+            </div>
+            <h4 class="ref-card-title">Rekap WhatsApp</h4>
+            <p class="ref-card-desc">Format rapi siap kirim</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- WRAPPER FITUR KALKULATOR SPLIT BILL -->
+    <div id="calculatorView" class="calculator-view" style="display: none;">
+      
+      <!-- Top Navigation to Return to Landing -->
+      <div class="calc-top-nav">
+        <button id="btnBackToHome" class="btn-text-nav" type="button" aria-label="Kembali ke Beranda">
+          <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+          <span>Kembali ke Beranda</span>
+        </button>
+      </div>
+
+      <!-- Main Responsive Dashboard Grid -->
+      <main class="dashboard-grid">
       
       <!-- LEFT COLUMN: Inputs, Mode, Items, & Fees -->
       <div class="dashboard-left-col">
@@ -136,7 +252,7 @@
           </div>
           
           <div class="form-group">
-            <label class="form-label" for="equalSubtotalInput">Subtotal Tagihan (Makanan & Minuman)</label>
+            <label class="form-label" for="equalSubtotalInput">Subtotal Tagihan (Total Biaya / Belanja)</label>
             <div class="input-currency-wrapper">
               <span class="input-currency-prefix">Rp</span>
               <input 
@@ -264,7 +380,7 @@
             <!-- Service Charge -->
             <div class="form-group">
               <div class="fee-input-row">
-                <label class="form-label" style="margin-bottom: 0;">Service Charge (Layanan Restoran)</label>
+                <label class="form-label" style="margin-bottom: 0;">Biaya Layanan (Service Charge)</label>
                 <div class="toggle-unit">
                   <button class="toggle-unit-btn active" data-fee="service" data-unit="PERCENT" type="button">%</button>
                   <button class="toggle-unit-btn" data-fee="service" data-unit="NOMINAL" type="button">Rp</button>
@@ -279,10 +395,10 @@
               </div>
             </div>
 
-            <!-- Pajak PB1 / Resto -->
+            <!-- Pajak -->
             <div class="form-group">
               <div class="fee-input-row">
-                <label class="form-label" style="margin-bottom: 0;">Pajak Restoran (PB1 / PPN)</label>
+                <label class="form-label" style="margin-bottom: 0;">Pajak (PPN / PB1)</label>
                 <div class="toggle-unit">
                   <button class="toggle-unit-btn active" data-fee="tax" data-unit="PERCENT" type="button">%</button>
                   <button class="toggle-unit-btn" data-fee="tax" data-unit="NOMINAL" type="button">Rp</button>
@@ -415,7 +531,7 @@
               <span id="summaryService" class="tabular-nums">+Rp 0</span>
             </div>
             <div id="rowTax" class="breakdown-row">
-              <span>Pajak Restoran PB1:</span>
+              <span>Pajak:</span>
               <span id="summaryTax" class="tabular-nums">+Rp 0</span>
             </div>
             <div id="rowTip" class="breakdown-row">
@@ -482,6 +598,7 @@
         </div>
       </div>
     </main>
+    </div>
 
     <!-- App Footer -->
     <footer class="app-footer">

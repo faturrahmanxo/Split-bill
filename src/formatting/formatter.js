@@ -53,12 +53,12 @@ export function generateShareText(result, session) {
 
   const modeLabel = session.mode === 'EQUAL' ? 'Bagi Rata' : 'Berdasarkan Pesanan';
 
-  let text = `🧾 *RINCIAN SPLIT BILL*\n`;
-  text += `🗓️ Waktu: ${dateStr}, ${timeStr} WIB\n`;
-  text += `📌 Mode: ${modeLabel}\n`;
+  let text = `*RINCIAN SPLIT BILL*\n`;
+  text += `Waktu: ${dateStr}, ${timeStr} WIB\n`;
+  text += `Mode: ${modeLabel}\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-  text += `💰 *RINGKASAN STRUK:*\n`;
+  text += `*RINGKASAN STRUK:*\n`;
   text += `• Subtotal Menu: ${formatIDR(result.subtotal)}\n`;
 
   if (result.discountAmount > 0) {
@@ -95,19 +95,16 @@ export function generateShareText(result, session) {
   text += `*TOTAL STRUK: ${formatIDR(result.finalTotal)}*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-  text += `👥 *RINCIAN YANG HARUS DIBAYAR:*\n`;
+  text += `*RINCIAN YANG HARUS DIBAYAR:*\n`;
   text += `_(Nominal di samping nama adalah TOTAL BERSIH yang harus ditransfer)_\n\n`;
 
-  const numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
-
   result.participantResults.forEach((p, idx) => {
-    const numBadge = numberEmojis[idx] || `${idx + 1}.`;
-    text += `${numBadge} *${p.name}* ➔ *${formatIDR(p.finalAmount)}* (Total Bayar)\n`;
+    text += `[${idx + 1}] *${p.name}* -> *${formatIDR(p.finalAmount)}* (Total Bayar)\n`;
 
     if (session.mode === 'ITEMIZED' && p.items && p.items.length > 0) {
       p.items.forEach(item => {
         if (item.isShared) {
-          text += `   • ${item.name} (${item.qty}x) [Patungan ${item.shareCount} org: ${formatIDR(item.userPortion)}]\n`;
+          text += `   • ${item.name} (${item.qty}x) [Patungan ${item.shareCount} orang: ${formatIDR(item.userPortion)}]\n`;
         } else {
           text += `   • ${item.name} (${item.qty}x): ${formatIDR(item.userPortion)}\n`;
         }
@@ -125,18 +122,18 @@ export function generateShareText(result, session) {
   const diff = sumCheck - result.finalTotal;
 
   if (diff === 0) {
-    text += `✅ *Status Akumulasi:* ${formatIDR(sumCheck)} (Pas 100%)\n`;
+    text += `*Status Akumulasi:* ${formatIDR(sumCheck)} (Pas 100%)\n`;
   } else if (diff > 0) {
-    text += `⚖️ *Status Akumulasi:* ${formatIDR(sumCheck)} (Dibulatkan +${formatIDR(diff)})\n`;
+    text += `*Status Akumulasi:* ${formatIDR(sumCheck)} (Dibulatkan +${formatIDR(diff)})\n`;
   } else {
-    text += `⚖️ *Status Akumulasi:* ${formatIDR(sumCheck)} (Dibulatkan -${formatIDR(Math.abs(diff))})\n`;
+    text += `*Status Akumulasi:* ${formatIDR(sumCheck)} (Dibulatkan -${formatIDR(Math.abs(diff))})\n`;
   }
 
   // Informasi Rekening / E-Wallet & Deep Link Pembayaran
   const payment = session.paymentInfo || {};
   if (payment.bankName || payment.accountNumber) {
     text += `━━━━━━━━━━━━━━━━━━━━━━\n`;
-    text += `💳 *INFORMASI PEMBAYARAN:*\n`;
+    text += `*INFORMASI PEMBAYARAN:*\n`;
     if (payment.bankName) {
       text += `• Bank / E-Wallet: *${payment.bankName}*\n`;
     }
@@ -150,7 +147,7 @@ export function generateShareText(result, session) {
   }
 
   text += `━━━━━━━━━━━━━━━━━━━━━━\n`;
-  text += `✨ Dihitung via: https://split-bill-sigma-two.vercel.app/`;
+  text += `Dihitung via: SplitBill.id`;
 
   return text;
 }
