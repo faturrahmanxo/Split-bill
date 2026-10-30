@@ -5,6 +5,7 @@
   "description": "Kalkulator Split Bill & Pajak Restoran Cepat & Akurat",
   "scripts": {
     "start": "node server.js",
+    "dev": "node server.js",
     "test": "node tests/run_tests.js"
   }
 }

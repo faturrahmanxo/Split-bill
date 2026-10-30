@@ -1769,16 +1769,7 @@ body.is-landing .app-footer {
   align-items: center;
   text-align: center;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  /* Hanya efek menyala / glow murni tanpa translate */
-  transition: border-color 0.28s ease, box-shadow 0.28s ease, background-color 0.28s ease;
   cursor: default;
-}
-
-.ref-feature-card:hover {
-  border-color: var(--palette-veranda);
-  background-color: var(--bg-surface-hover);
-  /* Efek menyala yang elegan dan tegas */
-  box-shadow: 0 0 24px rgba(107, 177, 173, 0.35), 0 0 8px rgba(107, 177, 173, 0.5), inset 0 0 14px rgba(107, 177, 173, 0.08);
 }
 
 .ref-card-icon {
@@ -1792,19 +1783,11 @@ body.is-landing .app-footer {
   justify-content: center;
   color: var(--palette-veranda);
   margin-bottom: 10px;
-  /* Icon hanya efek menyala tanpa translate atau scale */
-  transition: border-color 0.28s ease, box-shadow 0.28s ease, background-color 0.28s ease;
 }
 
 .ref-card-icon .icon-svg {
   width: 22px;
   height: 22px;
-}
-
-.ref-feature-card:hover .ref-card-icon {
-  border-color: var(--palette-veranda);
-  background: rgba(107, 177, 173, 0.22);
-  box-shadow: 0 0 14px var(--primary-glow);
 }
 
 .ref-card-title {
