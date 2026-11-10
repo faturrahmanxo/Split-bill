@@ -27,18 +27,76 @@ export function calculateBill(input) {
     name: (p.name || `Peserta ${idx + 1}`).trim() || `Peserta ${idx + 1}`
   }));
 
-  const fees = {
-    discount: sanitizeFee(input.fees?.discount),
-    service: sanitizeFee(input.fees?.service),
-    tax: sanitizeFee(input.fees?.tax),
-    tip: sanitizeFee(input.fees?.tip)
+  const ZERO_DECIMAL_CURRENCIES = ['IDR', 'JPY', 'KRW', 'VND', 'TWD', 'CLP', 'COP', 'HUF', 'PKR', 'MMK', 'KHR', 'LAK'];
+  const currencyCode = input.currency ? String(input.currency).toUpperCase() : 'IDR';
+  const hasFractionalValue =
+    (typeof input.subtotal === 'number' && Math.abs(input.subtotal - Math.round(input.subtotal)) > 0.001) ||
+    (Array.isArray(input.items) && input.items.some(it => Math.abs((Number(it.price) || 0) - Math.round(Number(it.price) || 0)) > 0.001));
+
+  const useCentsScale = (!ZERO_DECIMAL_CURRENCIES.includes(currencyCode) || hasFractionalValue) && roundingStep <= 1;
+  const scale = useCentsScale ? 100 : 1;
+
+  const scaleFee = (fee) => {
+    const clean = sanitizeFee(fee);
+    if (scale > 1 && clean.type === FeeType.NOMINAL) {
+      return { type: clean.type, value: Math.round(clean.value * scale) };
+    }
+    return clean;
   };
 
+  const fees = {
+    discount: scaleFee(input.fees?.discount),
+    service: scaleFee(input.fees?.service),
+    tax: scaleFee(input.fees?.tax),
+    tip: scaleFee(input.fees?.tip)
+  };
+
+  let rawResult;
   if (mode === SplitMode.EQUAL) {
-    return calculateEqualSplit(input.subtotal || 0, participants, fees, roundingStep);
+    const scaledSubtotal = Math.round((Number(input.subtotal) || 0) * scale);
+    rawResult = calculateEqualSplit(scaledSubtotal, participants, fees, roundingStep);
   } else {
-    return calculateItemizedSplit(input.items || [], participants, fees, roundingStep);
+    const scaledItems = (input.items || []).map(it => ({
+      ...it,
+      price: Math.round((Number(it.price) || 0) * scale)
+    }));
+    rawResult = calculateItemizedSplit(scaledItems, participants, fees, roundingStep);
   }
+
+  if (scale === 1) {
+    return rawResult;
+  }
+
+  const unscale = (val) => Number(((Number(val) || 0) / scale).toFixed(2));
+  return {
+    ...rawResult,
+    subtotal: unscale(rawResult.subtotal),
+    discountAmount: unscale(rawResult.discountAmount),
+    netSubtotal: unscale(rawResult.netSubtotal),
+    serviceAmount: unscale(rawResult.serviceAmount),
+    taxAmount: unscale(rawResult.taxAmount),
+    tipAmount: unscale(rawResult.tipAmount),
+    finalTotal: unscale(rawResult.finalTotal),
+    sumCalculated: unscale(rawResult.sumCalculated),
+    roundingDifference: unscale(rawResult.roundingDifference),
+    remainderDistributed: unscale(rawResult.remainderDistributed || 0),
+    participantResults: (rawResult.participantResults || []).map(p => ({
+      ...p,
+      subtotal: unscale(p.subtotal),
+      discountShare: unscale(p.discountShare),
+      serviceShare: unscale(p.serviceShare),
+      taxShare: unscale(p.taxShare),
+      tipShare: unscale(p.tipShare),
+      roundingAdjustment: unscale(p.roundingAdjustment),
+      exactFinalAmount: unscale(p.exactFinalAmount),
+      finalAmount: unscale(p.finalAmount),
+      items: (p.items || []).map(item => ({
+        ...item,
+        price: unscale(item.price),
+        userPortion: unscale(item.userPortion)
+      }))
+    }))
+  };
 }
 
 function applyRoundingStep(amount, step) {

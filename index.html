@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SplitBill.id — Kalkulator Patungan &amp; Biaya Bersama Cepat &amp; Akurat</title>
+  <title>SplitBill — Kalkulator Patungan &amp; Biaya Bersama Cepat &amp; Akurat</title>
   <meta name="description" content="Aplikasi hitung patungan dan split bill serbaguna gratis tanpa login. Mendukung bagi rata dan per item, hitung otomatis pajak, service charge, diskon, dan tip dengan pembulatan presisi.">
   <meta name="theme-color" content="#1d0929">
   
@@ -13,7 +13,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=1.4">
+  <link rel="stylesheet" href="style.css?v=4.2">
+</head>
 <body>
   <!-- Smooth Aesthetic Preloader Screen -->
   <div id="appPreloader" class="app-preloader" aria-hidden="true">
@@ -30,7 +31,7 @@
         </div>
       </div>
       <div class="preloader-text-group">
-        <h2 class="preloader-title">SplitBill<span class="preloader-accent">.id</span></h2>
+        <h2 class="preloader-title">SplitBill</h2>
         <p class="preloader-subtitle">Menyiapkan kalkulator presisi...</p>
       </div>
       <div class="preloader-bar-wrap">
@@ -55,7 +56,6 @@
         <div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span class="brand-title">SplitBill</span>
-            <span class="brand-badge">V1.0</span>
           </div>
         </div>
       </div>
@@ -84,120 +84,240 @@
       </div>
     </header>
 
-    <!-- TAMPILAN AWAL / HERO LANDING VIEW (INSPIRASI REF: LIVELY, STICKER HIGHLIGHT, ICONIC MINI-CARDS) -->
+    <!-- PAGE 1: HOME SCREEN SIMPEL & CLEAN DENGAN CTA UTAMA -->
     <section id="landingView" class="landing-view">
-      <div class="hero-container-ref">
-        <div class="hero-glow-orb"></div>
+      <div class="clean-hero-container">
         
-        <!-- Eyebrow Badge Pill -->
-        <div class="hero-ref-badge">
-          <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
-          <span>Kalkulator Patungan Serbaguna &bull; v1.0</span>
-        </div>
-
-        <!-- Big Catchy Title with Vibrant Sticker Pill -->
-        <h1 class="hero-ref-title">
-          <span class="hero-title-top">Bagi Tagihan Bareng</span>
-          <span class="hero-sticker-pill">Praktis &amp; Adil</span>
-          <span class="hero-title-bot">Tanpa Drama.</span>
+        <!-- Clean Simple Title & Subtitle -->
+        <h1 class="clean-hero-title">
+          Bagi Tagihan Bareng Jadi Lebih Simpel.
         </h1>
-
-        <!-- Short Tagline -->
-        <p class="hero-ref-tagline">
-          Hitung split bill belanja, liburan, sewa, langganan, atau nongkrong otomatis tanpa selisih rupiah.
+        <p class="clean-hero-subtitle">
+          Hitung patungan makan, nongkrong, atau belanja bersama secara presisi. Otomatis lewat scan struk maupun input manual di seluruh mata uang dunia.
         </p>
 
-        <!-- Single Central CTA Button & Stat Pill -->
-        <div class="hero-ref-cta-group">
-          <button id="heroBtnStart" class="btn-primary hero-ref-btn" type="button">
+        <!-- Primary CTA Button to Go to Method Selection Page -->
+        <div class="home-cta-wrap">
+          <button id="heroBtnStart" class="btn-primary home-cta-btn" type="button">
             <span>Mulai Hitung Tagihan</span>
             <svg class="icon-svg icon-md" viewBox="0 0 24 24">
               <path d="M5 12h14"/>
               <path d="m12 5 7 7-7 7"/>
             </svg>
           </button>
-          
-          <div class="hero-ref-stat-pill">
-            <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="m9 12 2 2 4-4"/>
-            </svg>
-            <span>100% Gratis &bull; Tanpa Registrasi</span>
-          </div>
         </div>
 
-        <!-- 4 Ref Feature Mini-Cards (Icon on Top, Bold Title, Mini Desc) -->
-        <div class="hero-ref-cards-grid">
-          <div class="ref-feature-card">
-            <div class="ref-card-icon">
-              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-            </div>
-            <h4 class="ref-card-title">Bagi Rata Cepat</h4>
-            <p class="ref-card-desc">Bagi rata instan 1 klik</p>
+        <!-- Minimal Feature Pills Footer -->
+        <div class="clean-hero-pills">
+          <div class="clean-pill-item">
+            <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+            <span>Scan Struk Akurat</span>
           </div>
-
-          <div class="ref-feature-card">
-            <div class="ref-card-icon">
-              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
-                <rect width="18" height="18" x="3" y="3" rx="2"/>
-                <path d="M3 9h18"/>
-                <path d="M9 21V9"/>
-              </svg>
-            </div>
-            <h4 class="ref-card-title">Per Item Pesanan</h4>
-            <p class="ref-card-desc">Rincian belanja per orang</p>
+          <div class="clean-pill-item">
+            <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+            <span>Seluruh Mata Uang Dunia</span>
           </div>
-
-          <div class="ref-feature-card">
-            <div class="ref-card-icon">
-              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
-                <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
-                <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
-                <path d="M7 21h10"/>
-                <path d="M12 3v18"/>
-                <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>
-              </svg>
-            </div>
-            <h4 class="ref-card-title">Pajak &amp; Diskon Adil</h4>
-            <p class="ref-card-desc">Proporsional tanpa selisih</p>
+          <div class="clean-pill-item">
+            <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+            <span>Hitung Pajak &amp; Diskon Adil</span>
           </div>
-
-          <div class="ref-feature-card">
-            <div class="ref-card-icon">
-              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
-                <circle cx="18" cy="5" r="3"/>
-                <circle cx="6" cy="12" r="3"/>
-                <circle cx="18" cy="19" r="3"/>
-                <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
-                <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
-              </svg>
-            </div>
-            <h4 class="ref-card-title">Rekap WhatsApp</h4>
-            <p class="ref-card-desc">Format rapi siap kirim</p>
+          <div class="clean-pill-item">
+            <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+            <span>Bagikan Struk Hasil</span>
           </div>
         </div>
 
       </div>
     </section>
 
-    <!-- WRAPPER FITUR KALKULATOR SPLIT BILL -->
+    <!-- PAGE 2: HALAMAN PILIH FITUR (MANUAL VS OTOMATIS VIA SCAN STRUK) -->
+    <section id="methodSelectView" class="landing-view" style="display: none;">
+      <div class="clean-hero-container">
+        
+        <div class="method-back-row">
+          <button id="btnBackToLanding" class="btn-text-nav" type="button">
+            <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+            <span>Kembali ke Beranda</span>
+          </button>
+        </div>
+
+        <h1 class="clean-hero-title" style="font-size: 32px;">
+          Pilih Metode Input Tagihan
+        </h1>
+        <p class="clean-hero-subtitle">
+          Pilih cara yang paling nyaman. Gunakan Scan Struk untuk ekstrak merchant &amp; menu, atau Input Manual.
+        </p>
+
+        <!-- 2 PILIHAN UTAMA: SCAN STRUK vs INPUT MANUAL (Tanpa Badge) -->
+        <div class="entry-choices-grid">
+          
+          <!-- Pilihan 1: Otomatis via Scan Struk -->
+          <div id="cardChoiceScan" class="entry-choice-card entry-choice-featured" role="button" tabindex="0">
+            <div class="entry-choice-top">
+              <div class="entry-choice-icon-wrap featured">
+                <svg class="icon-svg icon-lg" viewBox="0 0 24 24">
+                  <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+                  <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+                  <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+                  <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+                  <path d="M7 8h10"/>
+                  <path d="M7 12h10"/>
+                  <path d="M7 16h6"/>
+                </svg>
+              </div>
+            </div>
+            <div class="entry-choice-body">
+              <h2 class="entry-choice-title">Scan Struk</h2>
+              <p class="entry-choice-desc">
+                Pindai foto struk atau gunakan kamera dengan deteksi otomatis. Nama merchant, mata uang, menu, hingga pajak langsung terinput.
+              </p>
+            </div>
+            <div class="entry-choice-footer">
+              <span class="entry-choice-cta featured">
+                <span>Scan Struk Sekarang</span>
+                <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+                  <path d="M5 12h14"/>
+                  <path d="m12 5 7 7-7 7"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <!-- Pilihan 2: Input Manual -->
+          <div id="cardChoiceManual" class="entry-choice-card" role="button" tabindex="0">
+            <div class="entry-choice-top">
+              <div class="entry-choice-icon-wrap">
+                <svg class="icon-svg icon-lg" viewBox="0 0 24 24">
+                  <path d="M12 20h9"/>
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="entry-choice-body">
+              <h2 class="entry-choice-title">Input Manual</h2>
+              <p class="entry-choice-desc">
+                Pilih mata uang dari seluruh dunia dan isi nama merchant terlebih dahulu, lalu lanjut ke pembagian rata atau per pesanan.
+              </p>
+            </div>
+            <div class="entry-choice-footer">
+              <span class="entry-choice-cta">
+                <span>Mulai Input Manual</span>
+                <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+                  <path d="M5 12h14"/>
+                  <path d="m12 5 7 7-7 7"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PAGE 2B: FITUR MANUAL STEP 1 — INFO MERCHANT & MATA UANG -->
+    <section id="manualSetupView" class="landing-view" style="display: none;">
+      <div class="clean-hero-container" style="max-width: 580px;">
+        
+        <div class="method-back-row">
+          <button id="btnBackFromManualSetup" class="btn-text-nav" type="button">
+            <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+            <span>Kembali ke Pilihan Metode</span>
+          </button>
+        </div>
+
+        <div class="manual-step-card card">
+          <!-- Step Indicator Model 1 (Segmented Dashes seperti gambar contoh No. 1) -->
+          <div class="step-progress-bars" aria-label="Langkah 1 dari 2">
+            <span class="step-bar-segment active"></span>
+            <span class="step-bar-segment"></span>
+          </div>
+
+          <h2 class="manual-setup-title">Informasi Merchant &amp; Mata Uang</h2>
+          <p class="manual-setup-subtitle">
+            Pilih mata uang transaksi dan masukkan nama restoran atau merchant sebelum memilih metode pembagian pesanan.
+          </p>
+
+          <!-- Form 1: Dropdown Seluruh Mata Uang Dunia -->
+          <div class="form-group" style="text-align: left; margin-top: 20px;">
+            <label class="form-label" for="merchantCurrencySelect">Pilih Mata Uang Transaksi</label>
+            <div class="select-dropdown-wrap">
+              <select id="merchantCurrencySelect" class="input-text input-select-currency">
+                <!-- Populated dynamically with all WORLD_CURRENCIES -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Form 2: Nama Merchant -->
+          <div class="form-group" style="text-align: left;">
+            <label class="form-label" for="merchantNameInput">Nama Merchant / Restoran / Tempat</label>
+            <input
+              id="merchantNameInput"
+              class="input-text"
+              type="text"
+              placeholder="Contoh: Kopi Senja, Berghotel, Resto Nusantara..."
+              autocomplete="off"
+            >
+          </div>
+
+          <!-- Bagian Bawah: 2 Button (Bagi Rata Pesanan & Per Pesanan — Abu-abu & Disabled jika Merchant belum diisi) -->
+          <div class="manual-step-actions-label">
+            Pilih Cara Pembagian untuk Lanjut ke Langkah Berikutnya:
+          </div>
+          <div class="manual-step-buttons-grid">
+            <button id="btnManualGoEqual" class="btn-secondary manual-mode-btn" type="button" disabled>
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              <div class="manual-mode-btn-text">
+                <span class="manual-mode-btn-title">Bagi Rata Pesanan</span>
+                <span class="manual-mode-btn-sub">Total dibagi sama rata</span>
+              </div>
+            </button>
+
+            <button id="btnManualGoItemized" class="btn-primary manual-mode-btn" type="button" disabled>
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+                <path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"/>
+                <path d="M15 11v11"/>
+                <path d="M5 2v10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V2"/>
+                <path d="M8 2v10"/>
+                <path d="M8 14v8"/>
+              </svg>
+              <div class="manual-mode-btn-text">
+                <span class="manual-mode-btn-title">Per Pesanan</span>
+                <span class="manual-mode-btn-sub">Sesuai menu tiap orang</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- WRAPPER FITUR KALKULATOR SPLIT BILL (STEP 2 — Mata Uang & Merchant Terkunci) -->
     <div id="calculatorView" class="calculator-view" style="display: none;">
       
-      <!-- Top Navigation to Return to Landing -->
+      <!-- Top Bar: Kembali & Step Progress Model 1 -->
       <div class="calc-top-nav">
-        <button id="btnBackToHome" class="btn-text-nav" type="button" aria-label="Kembali ke Beranda">
+        <button id="btnBackToHome" class="btn-text-nav" type="button" aria-label="Kembali">
           <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          <span>Kembali ke Beranda</span>
+          <span>Kembali ke Pilihan Metode</span>
         </button>
+
+        <!-- Step Indicator Model 1 (Langkah 2 Aktif Penuh) -->
+        <div class="step-progress-bars" style="margin-bottom: 0;" aria-label="Langkah 2 dari 2">
+          <span class="step-bar-segment active"></span>
+          <span class="step-bar-segment active"></span>
+        </div>
       </div>
 
       <!-- Main Responsive Dashboard Grid -->
@@ -254,12 +374,12 @@
           <div class="form-group">
             <label class="form-label" for="equalSubtotalInput">Subtotal Tagihan (Total Biaya / Belanja)</label>
             <div class="input-currency-wrapper">
-              <span class="input-currency-prefix">Rp</span>
+              <span id="equalCurrencyPrefix" class="input-currency-prefix">Rp</span>
               <input 
                 id="equalSubtotalInput" 
                 class="input-currency tabular-nums" 
                 type="text" 
-                inputmode="numeric" 
+                inputmode="decimal" 
                 placeholder="0"
                 value="200.000"
               >
@@ -314,7 +434,7 @@
             </div>
           </div>
 
-          <div class="card-header" style="margin-top: 24px;">
+          <div class="card-header" style="margin-top: 24px; flex-wrap: wrap; gap: 10px;">
             <h2 class="card-title">
               <svg class="icon-svg icon-md" viewBox="0 0 24 24">
                 <path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"/>
@@ -325,7 +445,7 @@
               </svg>
               <span>Item Pesanan</span>
             </h2>
-            <button id="btnAddItem" class="preset-chip" style="background: var(--palette-amethyst); color: white; display: flex; align-items: center; gap: 6px;" type="button">
+            <button id="btnAddItem" class="preset-chip" style="background: var(--palette-amethyst); color: #ffffff; font-weight: 700; display: flex; align-items: center; gap: 6px;" type="button">
               <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
               <span>Tambah Menu</span>
             </button>
@@ -351,7 +471,7 @@
                 <line x1="9" x2="15" y1="8" y2="8"/>
                 <line x1="17" x2="23" y1="16" y2="16"/>
               </svg>
-              <span>Pajak, Service, Diskon & Tip</span>
+              <span>Pajak, Service, Diskon &amp; Tip</span>
             </span>
             <span id="toggleFeesIcon">
               <svg class="icon-svg icon-md" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg>
@@ -365,10 +485,10 @@
                 <label class="form-label" style="margin-bottom: 0;">Diskon Promosi</label>
                 <div class="toggle-unit">
                   <button class="toggle-unit-btn active" data-fee="discount" data-unit="PERCENT" type="button">%</button>
-                  <button class="toggle-unit-btn" data-fee="discount" data-unit="NOMINAL" type="button">Rp</button>
+                  <button class="toggle-unit-btn fee-nominal-unit-btn" data-fee="discount" data-unit="NOMINAL" type="button">Rp</button>
                 </div>
               </div>
-              <input id="discountValInput" class="input-text tabular-nums" type="text" inputmode="numeric" value="10" placeholder="0">
+              <input id="discountValInput" class="input-text tabular-nums" type="text" inputmode="decimal" value="10" placeholder="0">
               <div class="presets-group">
                 <button class="preset-chip" data-target="discount" data-val="0" type="button">0%</button>
                 <button class="preset-chip" data-target="discount" data-val="10" type="button">10%</button>
@@ -383,10 +503,10 @@
                 <label class="form-label" style="margin-bottom: 0;">Biaya Layanan (Service Charge)</label>
                 <div class="toggle-unit">
                   <button class="toggle-unit-btn active" data-fee="service" data-unit="PERCENT" type="button">%</button>
-                  <button class="toggle-unit-btn" data-fee="service" data-unit="NOMINAL" type="button">Rp</button>
+                  <button class="toggle-unit-btn fee-nominal-unit-btn" data-fee="service" data-unit="NOMINAL" type="button">Rp</button>
                 </div>
               </div>
-              <input id="serviceValInput" class="input-text tabular-nums" type="text" inputmode="numeric" value="5" placeholder="0">
+              <input id="serviceValInput" class="input-text tabular-nums" type="text" inputmode="decimal" value="5" placeholder="0">
               <div class="presets-group">
                 <button class="preset-chip" data-target="service" data-val="0" type="button">0%</button>
                 <button class="preset-chip" data-target="service" data-val="5" type="button">5%</button>
@@ -398,13 +518,13 @@
             <!-- Pajak -->
             <div class="form-group">
               <div class="fee-input-row">
-                <label class="form-label" style="margin-bottom: 0;">Pajak (PPN / PB1)</label>
+                <label class="form-label" style="margin-bottom: 0;">Pajak (PPN / PB1 / VAT)</label>
                 <div class="toggle-unit">
                   <button class="toggle-unit-btn active" data-fee="tax" data-unit="PERCENT" type="button">%</button>
-                  <button class="toggle-unit-btn" data-fee="tax" data-unit="NOMINAL" type="button">Rp</button>
+                  <button class="toggle-unit-btn fee-nominal-unit-btn" data-fee="tax" data-unit="NOMINAL" type="button">Rp</button>
                 </div>
               </div>
-              <input id="taxValInput" class="input-text tabular-nums" type="text" inputmode="numeric" value="10" placeholder="0">
+              <input id="taxValInput" class="input-text tabular-nums" type="text" inputmode="decimal" value="10" placeholder="0">
               <div class="presets-group">
                 <button class="preset-chip" data-target="tax" data-val="0" type="button">0%</button>
                 <button class="preset-chip" data-target="tax" data-val="10" type="button">10% (PB1)</button>
@@ -418,10 +538,10 @@
                 <label class="form-label" style="margin-bottom: 0;">Tip Tambahan (Sukarela)</label>
                 <div class="toggle-unit">
                   <button class="toggle-unit-btn active" data-fee="tip" data-unit="PERCENT" type="button">%</button>
-                  <button class="toggle-unit-btn" data-fee="tip" data-unit="NOMINAL" type="button">Rp</button>
+                  <button class="toggle-unit-btn fee-nominal-unit-btn" data-fee="tip" data-unit="NOMINAL" type="button">Rp</button>
                 </div>
               </div>
-              <input id="tipValInput" class="input-text tabular-nums" type="text" inputmode="numeric" value="0" placeholder="0">
+              <input id="tipValInput" class="input-text tabular-nums" type="text" inputmode="decimal" value="0" placeholder="0">
             </div>
           </div>
         </section>
@@ -437,22 +557,21 @@
               </svg>
               <span>Pembulatan Praktis</span>
             </h2>
-            <span class="badge-pill">Fitur Cerdas</span>
           </div>
           <div class="form-group" style="margin-bottom: 0;">
             <p class="section-hint" style="margin-bottom: 12px; font-size: 13px; color: var(--text-tertiary);">Bulatkan nominal yang harus dibayar tiap orang agar pembayaran tunai atau transfer pas tanpa uang recehan.</p>
             <div class="rounding-pill-group" role="group" aria-label="Opsi Pembulatan">
               <button id="btnRoundExact" type="button" class="rounding-pill-btn active" data-rounding="1">
-                <span class="rounding-pill-title">Eksak (Rp 1)</span>
+                <span class="rounding-pill-title">Eksak (Presisi)</span>
                 <span class="rounding-pill-sub">Presisi 100% pas</span>
               </button>
               <button id="btnRound100" type="button" class="rounding-pill-btn" data-rounding="100">
-                <span class="rounding-pill-title">Ratusan (Rp 100)</span>
-                <span class="rounding-pill-sub">Kelipatan Rp 100</span>
+                <span class="rounding-pill-title">Kelipatan 100</span>
+                <span class="rounding-pill-sub">Bulatkan ke 100</span>
               </button>
               <button id="btnRound1000" type="button" class="rounding-pill-btn" data-rounding="1000">
-                <span class="rounding-pill-title">Ribuan (Rp 1.000)</span>
-                <span class="rounding-pill-sub">Kelipatan Rp 1.000</span>
+                <span class="rounding-pill-title">Kelipatan 1.000</span>
+                <span class="rounding-pill-sub">Bulatkan ke 1.000</span>
               </button>
             </div>
           </div>
@@ -466,7 +585,7 @@
                 <rect width="20" height="14" x="2" y="5" rx="2"/>
                 <line x1="2" x2="22" y1="10" y2="10"/>
               </svg>
-              <span>Info Rekening & E-Wallet (Opsional)</span>
+              <span>Info Rekening &amp; E-Wallet (Opsional)</span>
             </h2>
           </div>
           
@@ -502,7 +621,7 @@
         </section>
       </div>
 
-      <!-- RIGHT COLUMN: Live Calculation Output, Participants Breakdown & Share Actions -->
+      <!-- RIGHT COLUMN: Live Calculation Output, Participants Breakdown & Bagikan Hasil Actions -->
       <div class="dashboard-right-col">
         
         <!-- SECTION 6: Hero Total & Breakdown (SCR-004) -->
@@ -518,8 +637,12 @@
           <div id="finalTotalDisplay" class="total-amount-display tabular-nums">Rp 0</div>
           
           <div class="breakdown-summary">
+            <div id="rowMerchantInfo" class="breakdown-row" style="display: none;">
+              <span>Merchant:</span>
+              <span id="summaryMerchantName" style="font-weight: 700; color: #EDECDB;">-</span>
+            </div>
             <div class="breakdown-row">
-              <span>Subtotal Makanan:</span>
+              <span>Subtotal Pesanan:</span>
               <span id="summarySubtotal" class="tabular-nums">Rp 0</span>
             </div>
             <div id="rowDiscount" class="breakdown-row" style="color: var(--accent-rose);">
@@ -568,15 +691,14 @@
                 <span>Rincian Yang Harus Dibayar</span>
               </h2>
             </div>
-            <span class="badge-total-hint">Total Bersih Tiap Orang</span>
           </div>
-          <p class="section-hint" style="margin-top: -6px; margin-bottom: 14px; font-size: 12px; color: var(--text-tertiary);">Nominal tebal di bawah sudah merupakan total final yang wajib dibayar / ditransfer (tidak dibagi lagi).</p>
+          <p class="section-hint" style="margin-top: -6px; margin-bottom: 14px; font-size: 12px; color: var(--text-tertiary);">Klik nama peserta untuk melihat rincian harga pesanan masing-masing orang.</p>
           <div id="participantsResultContainer">
             <!-- Rendered by JS -->
           </div>
         </section>
 
-        <!-- Desktop Action Buttons -->
+        <!-- Desktop Action Buttons (Bagikan Hasil langsung membagikan struk lengkap tanpa pop-up) -->
         <div class="sidebar-actions-panel">
           <button id="btnCopyTextDesktop" class="btn-secondary" type="button">
             <svg class="icon-svg icon-md" viewBox="0 0 24 24">
@@ -587,13 +709,9 @@
           </button>
           <button id="btnShareDesktop" class="btn-primary" type="button">
             <svg class="icon-svg icon-md" viewBox="0 0 24 24">
-              <circle cx="18" cy="5" r="3"/>
-              <circle cx="6" cy="12" r="3"/>
-              <circle cx="18" cy="19" r="3"/>
-              <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
-              <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
             </svg>
-            <span>Bagikan Hasil</span>
+            <span>Unduh Struk</span>
           </button>
         </div>
       </div>
@@ -604,7 +722,7 @@
     <footer class="app-footer">
       <div class="footer-inner">
         <p class="footer-copyright">&copy; 2026 FTR.dev | Built with clean code.</p>
-        <p class="footer-tagline">SplitBill.id Pro Utility &bull; Pemrosesan 100% Sisi Klien</p>
+        <p class="footer-tagline">SplitBill Pro Utility</p>
       </div>
     </footer>
 
@@ -620,24 +738,218 @@
         </button>
         <button id="btnShareWhatsApp" class="btn-primary" type="button">
           <svg class="icon-svg icon-md" viewBox="0 0 24 24">
-            <circle cx="18" cy="5" r="3"/>
-            <circle cx="6" cy="12" r="3"/>
-            <circle cx="18" cy="19" r="3"/>
-            <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
-            <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
           </svg>
-          <span>Bagikan Hasil</span>
+          <span>Unduh Struk</span>
         </button>
       </div>
     </footer>
 
+    <!-- MODAL SCAN STRUK (DENGAN DETEKSI BIRU & PILIHAN OTOMATIS / MANUAL DI DALAM KAMERA) -->
+    <div id="receiptScannerModal" class="scanner-modal-backdrop" style="display: none;" aria-hidden="true">
+      <div class="scanner-modal-card" role="dialog" aria-modal="true" aria-labelledby="scannerModalTitle">
+        
+        <!-- Modal Header -->
+        <div class="scanner-modal-header">
+          <div class="scanner-modal-title-wrap">
+            <div class="scanner-header-icon">
+              <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+                <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+                <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+                <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+                <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+                <path d="M7 8h10"/>
+                <path d="M7 12h10"/>
+                <path d="M7 16h6"/>
+              </svg>
+            </div>
+            <div>
+              <h3 id="scannerModalTitle" class="scanner-modal-title">Scan Struk</h3>
+              <p id="scannerModalSubtitle" class="scanner-modal-subtitle">Ekstrak nama merchant, mata uang, menu &amp; harga secara otomatis</p>
+            </div>
+          </div>
+          <button id="btnCloseScannerModal" class="btn-icon scanner-close-btn" type="button" aria-label="Tutup">
+            <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+              <path d="M18 6 6 18"/>
+              <path d="m6 6 12 12"/>
+            </svg>
+          </button>
+        </div>
 
+        <!-- Modal Body -->
+        <div class="scanner-modal-body">
+
+          <!-- Inline Validation Alert Banner inside Modal (Hanya 1 di dalam pop-up) -->
+          <div id="scannerValidationAlert" class="scanner-validation-alert" style="display: none;" role="alert">
+            <svg class="icon-svg icon-md" viewBox="0 0 24 24">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+              <line x1="12" x2="12" y1="9" y2="13"/>
+              <line x1="12" x2="12.01" y1="17" y2="17"/>
+            </svg>
+            <span id="scannerValidationText">Pesan validasi</span>
+          </div>
+          
+          <!-- Sub-Tabs: Upload Foto Struk vs Tempel Teks -->
+          <div class="scanner-source-tabs">
+            <button id="tabScanPhoto" class="scanner-source-tab active" type="button">
+              <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                <circle cx="12" cy="13" r="3"/>
+              </svg>
+              <span>Foto / Gambar Struk</span>
+            </button>
+            <button id="tabScanText" class="scanner-source-tab" type="button">
+              <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" x2="8" y1="13" y2="13"/>
+                <line x1="16" x2="8" y1="17" y2="17"/>
+              </svg>
+              <span>Tempel Teks / Orderan</span>
+            </button>
+          </div>
+
+          <!-- PANEL 1: Upload Foto / Kamera Live dengan Deteksi Biru & Pilihan Otomatis/Manual di Dalam Kamera -->
+          <div id="panelScanPhoto" class="scanner-source-panel">
+            
+            <!-- Live WebRTC Camera Viewfinder (Otomatis & Manual berada di dalam kamera ini) -->
+            <div id="cameraLiveContainer" class="camera-live-container" style="display: none;">
+              <div class="camera-video-wrap">
+                <video id="cameraVideoEl" autoplay playsinline muted></video>
+                <!-- Canvas Overlay Deteksi Biru Real-Time -->
+                <canvas id="cameraDetectionCanvas" class="camera-detection-canvas"></canvas>
+
+                <!-- Pilihan Otomatis vs Manual di Dalam Kamera -->
+                <div class="camera-in-view-mode-switch">
+                  <button id="btnScanModeAuto" class="camera-mode-btn active" type="button">
+                    <span>Otomatis</span>
+                  </button>
+                  <button id="btnScanModeManual" class="camera-mode-btn" type="button">
+                    <span>Manual</span>
+                  </button>
+                </div>
+
+                <span id="cameraAutoHintBadge" class="camera-guide-badge">Mendeteksi area struk...</span>
+              </div>
+
+              <div class="camera-controls-bar">
+                <button id="btnCloseCamera" class="btn-secondary btn-sm-pad" type="button">
+                  <span>Batal</span>
+                </button>
+                <button id="btnCaptureCamera" class="btn-primary btn-sm-pad" type="button">
+                  <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="9"/>
+                    <circle cx="12" cy="12" r="4"/>
+                  </svg>
+                  <span id="btnCaptureCameraLabel">Ambil Foto</span>
+                </button>
+                <button id="btnSwitchCamera" class="btn-secondary btn-sm-pad" type="button" title="Putar Kamera">
+                  <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                    <path d="M21 3v5h-5"/>
+                    <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+                    <path d="M3 21v-5h5"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Dropzone & Image Preview -->
+            <div id="scannerDropZone" class="scanner-dropzone">
+              <input id="receiptFileInput" type="file" accept="image/jpeg,image/png,image/webp" style="display: none;">
+              
+              <div id="dropzoneDefaultContent" class="dropzone-content">
+                <div class="dropzone-icon-circle">
+                  <svg class="icon-svg icon-lg" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" x2="12" y1="3" y2="15"/>
+                  </svg>
+                </div>
+                <div class="dropzone-title" style="margin-bottom: 6px;">Pilih Foto atau Scan Struk</div>
+                <div class="dropzone-btn-row">
+                  <button id="btnPickGallery" class="btn-primary btn-sm-pad" type="button">
+                    <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+                      <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                      <circle cx="9" cy="9" r="2"/>
+                      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                    </svg>
+                    <span>Pilih Foto</span>
+                  </button>
+                  <button id="btnPickCamera" class="btn-secondary btn-sm-pad" type="button">
+                    <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+                      <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+                      <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+                      <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+                      <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+                      <path d="M7 12h10"/>
+                    </svg>
+                    <span>Scan Struk</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Image Preview dengan Deteksi Biru -->
+              <div id="dropzonePreviewContent" class="dropzone-preview" style="display: none;">
+                <div class="receipt-thumb-wrap blue-detect-preview-frame">
+                  <img id="receiptPreviewImg" src="" alt="Preview Struk">
+                  <div id="scannerLaserLine" class="scanner-laser-blue"></div>
+                </div>
+                <div class="scanner-status-col">
+                  <div id="scannerStatusText" class="scanner-status-text">Mendeteksi &amp; memindai struk...</div>
+                  <div class="scanner-progress-bar">
+                    <div id="scannerProgressFill" class="scanner-progress-fill" style="width: 0%;"></div>
+                  </div>
+                  <button id="btnChangeReceiptPhoto" class="btn-text-nav" style="margin-top: 8px; padding: 4px 8px; font-size: 12px;" type="button">
+                    Pilih Foto Struk Lain
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL 2: Tempel Teks Struk / Orderan (Ukuran Kotak Input & Contoh Disamakan) -->
+          <div id="panelScanText" class="scanner-source-panel" style="display: none;">
+            <label class="form-label" for="rawReceiptTextarea">
+              Tempel teks struk atau daftar orderan (GoFood / GrabFood / WhatsApp):
+            </label>
+            <div class="text-scan-side-layout">
+              <div class="text-scan-input-col">
+                <textarea
+                  id="rawReceiptTextarea"
+                  class="input-text scanner-textarea-compact tabular-nums"
+                  rows="5"
+                  placeholder="Ketik atau tempel daftar pesanan di sini..."
+                ></textarea>
+              </div>
+              <div class="text-scan-example-box">
+                <div class="example-box-title">Contoh Format:</div>
+                <div class="example-box-lines tabular-nums">
+                  <div>Berghotel Grosse Scheidegg</div>
+                  <div>2x Latte Macchiato 4.50 CHF 9.00</div>
+                  <div>1x Gloki 5.00 CHF 5.00</div>
+                  <div>2x Nasi Goreng 70.000</div>
+                  <div>PB1 10%</div>
+                </div>
+              </div>
+            </div>
+            <div class="scanner-text-actions">
+              <button id="btnParseRawText" class="btn-primary btn-sm-pad" type="button" disabled>
+                <span>Deteksi Menu Otomatis</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
 
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container" aria-live="polite"></div>
   </div>
 
   <!-- Main JavaScript App (ES Modules) -->
-  <script type="module" src="src/ui/app.js"></script>
+  <script type="module" src="src/ui/app.js?v=4.2"></script>
 </body>
 </html>

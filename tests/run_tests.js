@@ -6,6 +6,13 @@
 import { calculateBill, SplitMode, FeeType } from '../src/calculation/engine.js';
 import { validateInput } from '../src/validation/validator.js';
 import { formatIDR, parseIDR, generateShareText } from '../src/formatting/formatter.js';
+import {
+  parseReceiptText,
+  extractMerchantName,
+  detectReceiptCurrency,
+  validateReceiptFile,
+  validateReceiptContent
+} from '../src/scanner/receiptScanner.js';
 
 let totalTests = 0;
 let passedTests = 0;
@@ -187,6 +194,146 @@ console.log('\n📌 Skenario 8: Kejelasan Teks WhatsApp');
   assert(text.includes('Total Bayar'), 'Label Total Bayar per orang tertera');
   assert(text.includes('TOTAL BERSIH'), 'Penjelasan total bersih tertera');
   assert(text.includes('RINGKASAN STRUK:'), 'Header ringkasan struk jelas');
+}
+
+// ==========================================
+// TEST-009: Smart Receipt Parser (Single-Line & Multi-Line POS)
+// ==========================================
+console.log('\n📌 Skenario 9: Smart Receipt Parser (Scan Struk, Merchant & Mata Uang)');
+{
+  const restoSampleText = `RESTO NUSANTARA RASA
+Jl. Sudirman No. 45, Jakarta
+--------------------------------
+2x Nasi Goreng Spesial   70.000
+1x Ayam Bakar Madu       45.000
+1x Gurame Asam Manis     85.000
+2x Sate Ayam Madura      60.000
+3x Nasi Putih            24.000
+2x Es Teh Manis          16.000
+2x Es Jeruk Peras        28.000
+1x Pisang Goreng Keju    22.000
+--------------------------------
+Subtotal                350.000
+Diskon Promo 10%        -35.000
+Service 5%               15.750
+PB1 10%                  33.075
+Total Bayar             363.825`;
+
+  const coffeeSampleText = `KOPI SENJA ROASTERY
+Kasir: Andi • Meja 12
+--------------------------------
+Kopi Susu Gula Aren
+3 x 24.000               72.000
+Matcha Latte Iced
+2 x 28.000               56.000
+Americano Hot
+1 x 20.000               20.000
+Croissant Almond
+2 x 25.000               50.000
+French Fries Truffle
+1 x 32.000               32.000
+Churros Cinnamon
+1 x 26.000               26.000
+--------------------------------
+Subtotal                256.000
+Service Charge 5%        12.800
+Pajak PB1 10%            26.880
+Grand Total             295.680`;
+
+  const parsedResto = parseReceiptText(restoSampleText);
+  assert(parsedResto.merchantName === 'RESTO NUSANTARA RASA', 'Merchant RESTO NUSANTARA RASA terdeteksi tanpa alamat');
+  assert(parsedResto.currency === 'IDR', 'Mata uang default struk Indonesia adalah IDR');
+  assert(parsedResto.items.length === 8, 'Struk Resto mendeteksi tepat 8 menu');
+  assert(parsedResto.items[0].name === 'Nasi Goreng Spesial', 'Item 1 bernama Nasi Goreng Spesial');
+  assert(parsedResto.items[0].qty === 2 && parsedResto.items[0].price === 35000, '2x Nasi Goreng Spesial total 70.000 -> harga satuan Rp 35.000');
+  assert(parsedResto.fees.discount?.value === 10 && parsedResto.fees.discount?.type === FeeType.PERCENT, 'Diskon 10% terdeteksi otomatis');
+  assert(parsedResto.fees.service?.value === 5 && parsedResto.fees.service?.type === FeeType.PERCENT, 'Service 5% terdeteksi otomatis');
+  assert(parsedResto.fees.tax?.value === 10 && parsedResto.fees.tax?.type === FeeType.PERCENT, 'Pajak PB1 10% terdeteksi otomatis');
+
+  const parsedCoffee = parseReceiptText(coffeeSampleText);
+  assert(parsedCoffee.merchantName === 'KOPI SENJA ROASTERY', 'Merchant KOPI SENJA ROASTERY terdeteksi');
+  assert(parsedCoffee.items.length === 6, 'Struk Kopi format 2-baris mendeteksi tepat 6 menu');
+  assert(parsedCoffee.items[0].name === 'Kopi Susu Gula Aren', 'Item 1 Kopi Susu Gula Aren terdeteksi');
+  assert(parsedCoffee.items[0].qty === 3 && parsedCoffee.items[0].price === 24000, '3 x 24.000 terdeteksi qty 3 & harga satuan Rp 24.000');
+
+  // Uji validasi tolak PDF
+  const pdfCheck = validateReceiptFile({ name: 'tagihan.pdf', type: 'application/pdf', size: 102400 });
+  assert(!pdfCheck.valid && pdfCheck.message.includes('PDF'), 'Menolak file PDF dengan pesan validasi jelas');
+
+  // Uji validasi gambar valid
+  const imgCheck = validateReceiptFile({ name: 'struk.jpg', type: 'image/jpeg', size: 204800 });
+  assert(imgCheck.valid, 'Menerima file gambar struk JPG');
+
+  // Uji validasi konten bukan struk
+  const randomText = 'Halo selamat pagi ini bukan struk belanja';
+  const randomParsed = parseReceiptText(randomText);
+  const contentCheckFail = validateReceiptContent(randomText, randomParsed, true);
+  assert(!contentCheckFail.valid, 'Menolak gambar/teks yang bukan struk pesanan');
+
+  // Uji validasi konten struk asli
+  const contentCheckPass = validateReceiptContent(restoSampleText, parsedResto, true);
+  assert(contentCheckPass.valid, 'Menerima konten struk pesanan yang valid');
+
+  // Uji struk desimal / internasional (Berghotel Grosse Scheidegg dalam CHF)
+  const berghotelReceipt = `Berghotel
+Grosse Scheidegg
+3818 Grindelwald
+Familie R. Müller
+Rech.Nr. 4572 30.07.2007/13:29:17
+Bar Tisch 7/01
+2xLatte Macchiato à 4.50 CHF 9.00
+1xGloki à 5.00 CHF 5.00
+1xSchweinschnitzel à 22.00 CHF 22.00
+1xChässpätzli à 18.50 CHF 18.50
+Total : CHF 54.50
+Incl. 7.6% MwSt 54.50 CHF: 3.85
+Entspricht in Euro 36.33 EUR
+Es bediente Sie: Ursula
+MwSt Nr.: 430 234
+Tel.: 033 853 67 16
+Fax.: 033 853 67 19
+E-mail: grossescheidegg@bluewin.ch`;
+  const parsedBerghotel = parseReceiptText(berghotelReceipt);
+  const checkBerghotel = validateReceiptContent(berghotelReceipt, parsedBerghotel, true);
+  assert(checkBerghotel.valid && parsedBerghotel.items.length === 4, 'Struk Berghotel (format desimal & mata uang CHF) terdeteksi tepat 4 menu');
+  assert(parsedBerghotel.merchantName === 'Berghotel Grosse Scheidegg', `Merchant Berghotel Grosse Scheidegg terdeteksi (dapat: "${parsedBerghotel.merchantName}")`);
+  assert(parsedBerghotel.currency === 'CHF', `Mata uang CHF terdeteksi otomatis (dapat: "${parsedBerghotel.currency}")`);
+  assert(parsedBerghotel.items[0].name === 'Latte Macchiato' && parsedBerghotel.items[0].qty === 2 && parsedBerghotel.items[0].price === 4.5, '2xLatte Macchiato à 4.50 CHF 9.00 terdeteksi harga satuan 4.50 CHF');
+  assert(parsedBerghotel.items[3].price === 18.5, '1xChässpätzli terdeteksi harga satuan 18.50 CHF');
+
+  // Uji perhitungan engine pada mata uang desimal (CHF)
+  const calcChf = calculateBill({
+    mode: SplitMode.ITEMIZED,
+    currency: 'CHF',
+    participants: [{ id: 'p1', name: 'Budi' }, { id: 'p2', name: 'Siti' }],
+    items: parsedBerghotel.items.map((it, idx) => ({
+      id: `i_${idx}`,
+      name: it.name,
+      price: it.price,
+      qty: it.qty,
+      participantIds: ['p1', 'p2']
+    })),
+    fees: {}
+  });
+  assert(calcChf.finalTotal === 54.5, `Total perhitungan CHF tepat 54.50 CHF (dapat: ${calcChf.finalTotal})`);
+  assert(calcChf.participantResults[0].finalAmount === 27.25 && calcChf.participantResults[1].finalAmount === 27.25, 'Bagi 2 dari 54.50 CHF tepat masing-masing 27.25 CHF');
+
+  // Uji struk saat OCR memisahkan kolom kiri (nama menu) & kolom kanan (harga) + noise pinggiran
+  const splitColumnOcrReceipt = `Berqhotel
+Grosse Scheidegg
+2xLatte Macchiato
+IxGloki
+lxSchweinschnitzel
+1xChässpätzli
+à 4. 50 CHE 9.OO |
+a 5.00 CHF 5.00 |
+à 22.00 CHF 22.00 .
+à 18.50 CHF 18.50 |
+Total : CHF 54.50`;
+  const parsedSplitCol = parseReceiptText(splitColumnOcrReceipt);
+  assert(parsedSplitCol.items.length === 4, 'Struk dengan kolom terpisah oleh OCR tetap mendeteksi tepat 4 menu');
+  assert(parsedSplitCol.merchantName === 'Berghotel Grosse Scheidegg', 'Koreksi OCR Berqhotel -> Berghotel Grosse Scheidegg berhasil');
+  assert(parsedSplitCol.items[1].name === 'Gloki' && parsedSplitCol.items[1].qty === 1 && parsedSplitCol.items[1].price === 5, 'Pasangan antrean kolom nama & harga presisi (5.00 CHF)');
 }
 
 
