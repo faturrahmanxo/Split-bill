@@ -112,13 +112,15 @@ const IGNORE_LINE_PATTERNS = [
   /^(kasir|cashier|server|waiter|waitress|operator|admin|pelanggan|customer|member|guest|nama\s*tamu)\b/i,
   /^(tanggal|tgl|date|waktu|time|jam|no\.?\s*struk|no\.?\s*nota|no\.?\s*bill|no\.?\s*order|no\.?\s*trans|order\s*id|receipt|invoice|bill\s*no|table|meja|tisch|dine\s*in|take\s*away|delivery|gofood|grabfood|shopeefood)\b/i,
   /^(rech\.?\s*nr|bon\s*nr|beleg\s*nr|ust-?id|mwst\s*nr|steuernummer|bediente\s*sie|es\s*bediente|vielen\s*dank|danke|auf\s*wiedersehen|familie\s+[a-z])\b/i,
-  /^(tunai|cash|kembalian|kembali|change|kredit|debit|qris|gopay|ovo|dana|shopeepay|linkaja|bca|mandiri|bni|bri|btn|kartu|card|payment|pembayaran|bayar|paid)\b/i,
-  /^(terima\s*kasih|thank\s*you|thanks|selamat\s*datang|welcome|wifi|password|ig|instagram|telp|tel\.?|fax\.?|wa|whatsapp|hp|phone|alamat|jl\.|jalan|npwp|www\.|http|e-?mail)\b/i,
+  /^(tunai|cash|kembalian|kembali|change|kredit|debit|qris|gopay|ovo|dana|shopeepay|linkaja|bca|mandiri|bni|bri|btn|kartu|card|payment|pembayaran|bayar|paid|lunas)\b/i,
+  /^(terima\s*kasih|thank\s*you|thanks|selamat\s*datang|welcome|wifi|password|ig|instagram|telp|tel\.?|fax\.?|wa|whatsapp|hp|phone|alamat|jl\.?|jalan|npwp|www\.|http|e-?mail)\b/i,
   /^(incl\.?\s*\d|inkl\.?\s*\d|entspricht\s*in\s*euro|barang\s*kena\s*pajak|harga\s*termasuk|sudah\s*termasuk|tax\s*included|nett)\b/i,
+  /\b(belanja\s*puas|harga\s*pas|barang\s*yang\s*sudah|tidak\s*bisa\s*dikembalikan|dikembalikan\s*lagi|isa\s*dikembalikan)\b/i,
   /^(bar\s+tisch|tisch\s+\d)/i,
   /^\s*[-=*_~.#]{3,}\s*$/,
-  /^\s*\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/,
+  /^\s*\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}/,
   /^\s*\d{2}:\d{2}(:\d{2})?\s*$/,
+  /^\s*08\d{7,12}\s*$/,
   /^\s*\d{4}\s+[A-Z][a-zA-ZäöüÄÖÜ]+$/ // Kode pos + kota (misal: "3818 Grindelwald")
 ];
 
@@ -217,16 +219,27 @@ export function extractMerchantName(rawText) {
     { regex: /\bsushi\s*tei\b/i, name: 'Sushi Tei' }
   ];
 
+  const stopHeaderRegex = /\b(jl\.?|jalan|street|st\.|road|rd\.|avenue|no\.?\s*\d|telp|tel\.?|fax\.?|phone|hp|wa|whatsapp|npwp|struk|kasir|cashier|server|tanggal|tgl|date|time|waktu|jam|meja|table|tisch|rech\.?\s*nr|bon|invoice|receipt|order|bill|bar\b|subtotal|total|pajak|tax|mwst|incl|welcome|selamat\s*datang|familie|pt\.?\s|cv\.?\s|cabang|outlet)\b/i;
+
   for (const brand of knownBrands) {
     if (brand.regex.test(headerSlice)) {
+      // Jika di baris atas struk tertera cabang / lokasi (misal "Alfamart Jogja" atau "Indomaret Sudirman")
+      for (const line of rawLines.slice(0, 5)) {
+        const brandPattern = brand.name.replace(/[^a-zA-Z]/g, '\\s*');
+        const match = line.match(new RegExp(`\\b(?:${brandPattern})\\s+([A-Za-zÀ-ÿ]+)\\b`, 'i'));
+        if (match && match[1]) {
+          const branch = match[1];
+          if (!stopHeaderRegex.test(branch) && branch.length >= 3) {
+            return `${brand.name} ${branch.charAt(0).toUpperCase() + branch.slice(1).toLowerCase()}`;
+          }
+        }
+      }
       return brand.name;
     }
   }
 
   const merchantLines = [];
   const maxLinesToScan = Math.min(rawLines.length, 10);
-
-  const stopHeaderRegex = /\b(jl\.?|jalan|street|st\.|road|rd\.|avenue|no\.?\s*\d|telp|tel\.?|fax\.?|phone|hp|wa|whatsapp|npwp|struk|kasir|cashier|server|tanggal|tgl|date|time|waktu|jam|meja|table|tisch|rech\.?\s*nr|bon|invoice|receipt|order|bill|bar\b|subtotal|total|pajak|tax|mwst|incl|welcome|selamat\s*datang|familie|pt\.?\s|cv\.?\s|cabang|outlet)\b/i;
 
   for (let i = 0; i < maxLinesToScan; i++) {
     let line = rawLines[i];
@@ -357,11 +370,12 @@ function normalizeOcrLine(line) {
     .replace(/\t+/g, '   ')
     .trim();
 
-  // Perbaiki OCR yang membaca "1x" sebagai "lx", "Ix", "|x", "!x" atau "2x" sebagai "Zx" di awal baris
-  s = s.replace(/^(?:[lI|!])\s*([xX*])\s*(?=[A-Za-zÀ-ÿ])/g, '1$1 ');
-  s = s.replace(/^(?:[zZ])\s*([xX*])\s*(?=[A-Za-zÀ-ÿ])/g, '2$1 ');
+  // Perbaiki OCR yang membaca "1x" sebagai "lx", "Ix", "|x", "!x" atau "2x" sebagai "Zx" di awal baris (baik diikuti huruf maupun angka harga)
+  s = s.replace(/^(?:[lI|!])\s*([xX*])\s*(?=[A-Za-zÀ-ÿ0-9])/g, '1$1 ');
+  s = s.replace(/^(?:[zZ])\s*([xX*])\s*(?=[A-Za-zÀ-ÿ0-9])/g, '2$1 ');
 
-  // Perbaiki OCR yang membaca angka 0 sebagai huruf O/o di dalam nominal harga
+  // Perbaiki OCR yang membaca angka 0 sebagai huruf O/o di dalam nominal harga (seperti "1O.000", "2.0O0", "9.OOO")
+  s = s.replace(/(\d)[oO](?=[.,]?\d)/g, '$10');
   s = s.replace(/(\d)[.,]([oO0]{2,3})\b/g, (_, d, zeros) => `${d}.${'0'.repeat(zeros.length)}`);
   s = s.replace(/(\d)([oO]{2,3})\b/g, (_, d, zeros) => `${d}${'0'.repeat(zeros.length)}`);
 
@@ -463,11 +477,11 @@ export function parseReceiptText(rawText, forcedCurrency = null) {
 
   const priceGlobalRegex = /(?<!\d)(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{2})?|\d{1,5}[.,]\d{2}|\d{3,8}|\d{1,4}(?:[.,]\d)?\s*(?:k|rb|ribu))(?!\d)/gi;
   const multiLineQtyPriceRegex = new RegExp(
-    `^(\\d{1,3}|[lI|!zZ])\\s*[xX*@]\\s*(?:${CURRENCY_REGEX_PART}\\s*)?${PRICE_REGEX_PART}(?:\\s+(?:${CURRENCY_REGEX_PART}\\s*)?${PRICE_REGEX_PART})?\\s*$`,
+    `^(\\d{1,3}|[lI|!zZ])\\s*[xX*@]\\s*(?:${CURRENCY_REGEX_PART}\\s*)?${PRICE_REGEX_PART}(?:\\s+(?:${CURRENCY_REGEX_PART}\\s*)?${PRICE_REGEX_PART})?[^a-zA-Z0-9]*$`,
     'i'
   );
   const multiLinePriceQtyRegex = new RegExp(
-    `^(?:${CURRENCY_REGEX_PART}\\s*)?${PRICE_REGEX_PART}\\s*[xX*]\\s*(\\d{1,3})(?:\\s+(?:${CURRENCY_REGEX_PART}\\s*)?${PRICE_REGEX_PART})?\\s*$`,
+    `^(?:${CURRENCY_REGEX_PART}\\s*)?${PRICE_REGEX_PART}\\s*[xX*]\\s*(\\d{1,3})(?:\\s+(?:${CURRENCY_REGEX_PART}\\s*)?${PRICE_REGEX_PART})?[^a-zA-Z0-9]*$`,
     'i'
   );
 
@@ -554,34 +568,46 @@ export function parseReceiptText(rawText, forcedCurrency = null) {
       continue;
     }
 
-    // Pola Multi-baris A: Baris berisi "3 x 24.000   72.000"
+    // Pola Multi-baris A: Baris berisi "3 x 24.000   72.000" atau "1x 2.000"
     const multiLineQtyPriceMatch = line.match(multiLineQtyPriceRegex);
-    if (multiLineQtyPriceMatch && pendingItemsQueue.length > 0) {
-      const pending = pendingItemsQueue.shift();
+    if (multiLineQtyPriceMatch) {
       const qty = parseQtyToken(multiLineQtyPriceMatch[1]);
       const firstPrice = parseNum(multiLineQtyPriceMatch[2]);
-      if (checkPrice(firstPrice)) {
+      if (pendingItemsQueue.length > 0 && checkPrice(firstPrice)) {
+        const pending = pendingItemsQueue.shift();
         items.push({
           name: pending.name,
           qty,
           price: firstPrice
         });
+      } else if (items.length > 0 && checkPrice(firstPrice)) {
+        const prevItem = items[items.length - 1];
+        if (prevItem.qty === 1 && Math.abs(prevItem.price - firstPrice * qty) < 1) {
+          prevItem.qty = qty;
+          prevItem.price = firstPrice;
+        }
       }
       continue;
     }
 
     // Pola Multi-baris B: Baris berisi "24.000 x 3   72.000"
     const multiLinePriceQtyMatch = line.match(multiLinePriceQtyRegex);
-    if (multiLinePriceQtyMatch && pendingItemsQueue.length > 0) {
-      const pending = pendingItemsQueue.shift();
+    if (multiLinePriceQtyMatch) {
       const firstPrice = parseNum(multiLinePriceQtyMatch[1]);
       const qty = parseQtyToken(multiLinePriceQtyMatch[2]);
-      if (checkPrice(firstPrice)) {
+      if (pendingItemsQueue.length > 0 && checkPrice(firstPrice)) {
+        const pending = pendingItemsQueue.shift();
         items.push({
           name: pending.name,
           qty,
           price: firstPrice
         });
+      } else if (items.length > 0 && checkPrice(firstPrice)) {
+        const prevItem = items[items.length - 1];
+        if (prevItem.qty === 1 && Math.abs(prevItem.price - firstPrice * qty) < 1) {
+          prevItem.qty = qty;
+          prevItem.price = firstPrice;
+        }
       }
       continue;
     }
@@ -603,14 +629,16 @@ export function parseReceiptText(rawText, forcedCurrency = null) {
         const textBeforeFirstPrice = line.slice(0, firstMatch.index).trim();
         const textBeforeLastPrice = line.slice(0, lastMatch.index).trim();
 
-        // Kasus 1: Baris hanya berisi harga (misal "à 4.50 CHF 9.00" atau "70.000") dan ada antrean nama item sebelumnya
+        // Kasus 1: Baris hanya berisi harga (misal "à 4.50 CHF 9.00", "1x 2.000 2.000", atau "70.000") dan ada antrean nama item sebelumnya
+        const prefixQtyInPriceLine = textBeforeFirstPrice.match(/^(\d{1,3}|[lI|!zZ])\s*[xX*@]/);
         const strippedPrefixSymbols = textBeforeFirstPrice
+          .replace(/^(\d{1,3}|[lI|!zZ])\s*[xX*@]\s*/i, '')
           .replace(new RegExp(`^[@àáäad&o4*xX\\s]+|${CURRENCY_REGEX_PART}`, 'gi'), '')
           .trim();
 
         if (strippedPrefixSymbols.length < 2 && pendingItemsQueue.length > 0 && checkPrice(lastAmount)) {
           const pending = pendingItemsQueue.shift();
-          const qty = pending.qty || 1;
+          const qty = prefixQtyInPriceLine ? parseQtyToken(prefixQtyInPriceLine[1]) : (pending.qty || 1);
           let unitPrice = lastAmount;
           if (priceMatches.length >= 2 && checkPrice(firstAmount)) {
             unitPrice = firstAmount;
@@ -850,19 +878,21 @@ function reconstructHorizontalLines(ocrData) {
 }
 
 /**
- * Mendeteksi koordinat kotak kertas struk pada gambar/frame video (untuk kotak deteksi biru & auto-crop)
+ * Mendeteksi koordinat area kertas struk beserta 4 titik sudut poligonnya pada gambar/frame video
  */
 export function detectPaperBounds(srcData, fullW, fullH) {
   const gridStep = Math.max(2, Math.floor(Math.min(fullW, fullH) / 160));
   const rowPaperCounts = new Int32Array(fullH);
   const colPaperCounts = new Int32Array(fullW);
+  const rowTextEdgeCounts = new Int32Array(fullH);
+  const colTextEdgeCounts = new Int32Array(fullW);
   let sampledCols = 0;
   let sampledRows = 0;
 
-  for (let y = 0; y < fullH; y += gridStep) {
+  for (let y = gridStep; y < fullH - gridStep; y += gridStep) {
     sampledRows++;
-    for (let x = 0; x < fullW; x += gridStep) {
-      if (y === 0) sampledCols++;
+    for (let x = gridStep; x < fullW - gridStep; x += gridStep) {
+      if (y === gridStep) sampledCols++;
       const idx = (y * fullW + x) * 4;
       const r = srcData[idx];
       const g = srcData[idx + 1];
@@ -871,117 +901,230 @@ export function detectPaperBounds(srcData, fullW, fullH) {
       const minC = Math.min(r, g, b);
       const lum = 0.299 * r + 0.587 * g + 0.114 * b;
       const sat = maxC - minC;
-      // Kertas struk terang (lum > 140) dan bersaturasi rendah
-      if (lum > 140 && sat < 68) {
+
+      const idxLeft = (y * fullW + (x - gridStep)) * 4;
+      const idxRight = (y * fullW + (x + gridStep)) * 4;
+      const lumLeft = 0.299 * srcData[idxLeft] + 0.587 * srcData[idxLeft + 1] + 0.114 * srcData[idxLeft + 2];
+      const lumRight = 0.299 * srcData[idxRight] + 0.587 * srcData[idxRight + 1] + 0.114 * srcData[idxRight + 2];
+      const gradX = Math.abs(lumRight - lumLeft);
+
+      if (lum > 138 && sat < 68) {
         rowPaperCounts[y]++;
         colPaperCounts[x]++;
+      }
+
+      // Deteksi transisi tinta teks di atas kertas terang
+      if (gradX > 26 && Math.max(lum, lumLeft, lumRight) > 135 && sat < 75) {
+        rowTextEdgeCounts[y]++;
+        colTextEdgeCounts[x]++;
       }
     }
   }
 
-  const minRowThreshold = Math.max(3, Math.floor(sampledCols * 0.26));
-  const minColThreshold = Math.max(3, Math.floor(sampledRows * 0.26));
+  // Coba deteksi berbasis kerapatan baris teks di atas kertas struk terlebih dahulu (akurat meski background terang)
+  const minTextRow = Math.max(2, Math.floor(sampledCols * 0.045));
+  const minTextCol = Math.max(2, Math.floor(sampledRows * 0.055));
 
-  let topY = 0;
-  let bottomY = fullH - 1;
+  let tTop = gridStep;
+  let tBottom = fullH - gridStep - 1;
+  let tLeft = gridStep;
+  let tRight = fullW - gridStep - 1;
+
+  while (tTop < fullH && rowTextEdgeCounts[tTop] < minTextRow) tTop += gridStep;
+  while (tBottom > tTop && rowTextEdgeCounts[tBottom] < minTextRow) tBottom -= gridStep;
+  while (tLeft < fullW && colTextEdgeCounts[tLeft] < minTextCol) tLeft += gridStep;
+  while (tRight > tLeft && colTextEdgeCounts[tRight] < minTextCol) tRight -= gridStep;
+
+  const textW = tRight - tLeft;
+  const textH = tBottom - tTop;
+  const hasStrongTextCluster =
+    textW > fullW * 0.16 &&
+    textH > fullH * 0.24 &&
+    textW < fullW * 0.94 &&
+    textH < fullH * 0.95;
+
   let leftX = 0;
   let rightX = fullW - 1;
+  let topY = 0;
+  let bottomY = fullH - 1;
+  let isValid = false;
 
-  while (topY < fullH && rowPaperCounts[topY] < minRowThreshold) topY += gridStep;
-  while (bottomY > topY && rowPaperCounts[bottomY] < minRowThreshold) bottomY -= gridStep;
-  while (leftX < fullW && colPaperCounts[leftX] < minColThreshold) leftX += gridStep;
-  while (rightX > leftX && colPaperCounts[rightX] < minColThreshold) rightX -= gridStep;
+  if (hasStrongTextCluster) {
+    // Perluas sedikit dari area teks menuju tepi kertas struk
+    const expandX = Math.round(textW * 0.12);
+    const expandY = Math.round(textH * 0.1);
+    leftX = Math.max(0, tLeft - expandX);
+    rightX = Math.min(fullW - 1, tRight + expandX);
+    topY = Math.max(0, tTop - expandY);
+    bottomY = Math.min(fullH - 1, tBottom + expandY);
+    isValid = true;
+  } else {
+    const minRowThreshold = Math.max(3, Math.floor(sampledCols * 0.26));
+    const minColThreshold = Math.max(3, Math.floor(sampledRows * 0.26));
 
-  const cropW = rightX - leftX;
-  const cropH = bottomY - topY;
-  const isValid = cropW > fullW * 0.28 && cropH > fullH * 0.32 && (cropW < fullW * 0.96 || cropH < fullH * 0.96);
+    while (topY < fullH && rowPaperCounts[topY] < minRowThreshold) topY += gridStep;
+    while (bottomY > topY && rowPaperCounts[bottomY] < minRowThreshold) bottomY -= gridStep;
+    while (leftX < fullW && colPaperCounts[leftX] < minColThreshold) leftX += gridStep;
+    while (rightX > leftX && colPaperCounts[rightX] < minColThreshold) rightX -= gridStep;
+
+    const cropW = rightX - leftX;
+    const cropH = bottomY - topY;
+    isValid = cropW > fullW * 0.22 && cropH > fullH * 0.28 && (cropW < fullW * 0.95 || cropH < fullH * 0.95);
+  }
 
   if (!isValid) {
     const fallbackPadX = Math.round(fullW * 0.08);
     const fallbackPadY = Math.round(fullH * 0.06);
+    const fx = fallbackPadX;
+    const fy = fallbackPadY;
+    const fw = fullW - fallbackPadX * 2;
+    const fh = fullH - fallbackPadY * 2;
     return {
       detected: false,
-      x: fallbackPadX,
-      y: fallbackPadY,
-      width: fullW - fallbackPadX * 2,
-      height: fullH - fallbackPadY * 2
+      x: fx,
+      y: fy,
+      width: fw,
+      height: fh,
+      corners: [
+        { x: fx, y: fy },
+        { x: fx + fw, y: fy },
+        { x: fx + fw, y: fy + fh },
+        { x: fx, y: fy + fh }
+      ]
     };
   }
 
-  const padX = Math.round(cropW * 0.02);
-  const padY = Math.round(cropH * 0.02);
+  const cropW = rightX - leftX;
+  const cropH = bottomY - topY;
+  const padX = Math.round(cropW * 0.03);
+  const padY = Math.round(cropH * 0.03);
   const sx = Math.max(0, leftX - padX);
   const sy = Math.max(0, topY - padY);
   const sw = Math.min(fullW - sx, cropW + padX * 2);
   const sh = Math.min(fullH - sy, cropH + padY * 2);
+
+  // Hitung 4 titik sudut poligon struk (atas-kiri, atas-kanan, bawah-kanan, bawah-kiri) agar mengikuti kemiringan struk
+  const scanBandEdges = (yStart, yEnd) => {
+    let sumLeft = 0;
+    let sumRight = 0;
+    let count = 0;
+    for (let y = yStart; y <= yEnd; y += gridStep * 2) {
+      let rowL = -1;
+      let rowR = -1;
+      for (let x = sx; x <= sx + sw - 1; x += gridStep) {
+        const idx = (y * fullW + x) * 4;
+        const lum = 0.299 * srcData[idx] + 0.587 * srcData[idx + 1] + 0.114 * srcData[idx + 2];
+        const sat = Math.max(srcData[idx], srcData[idx + 1], srcData[idx + 2]) - Math.min(srcData[idx], srcData[idx + 1], srcData[idx + 2]);
+        if (lum > 138 && sat < 68) {
+          if (rowL === -1) rowL = x;
+          rowR = x;
+        }
+      }
+      if (rowL !== -1 && rowR - rowL > sw * 0.35) {
+        sumLeft += rowL;
+        sumRight += rowR;
+        count++;
+      }
+    }
+    if (count === 0) return { left: sx, right: sx + sw };
+    return {
+      left: Math.max(sx, Math.round(sumLeft / count) - padX),
+      right: Math.min(sx + sw, Math.round(sumRight / count) + padX)
+    };
+  };
+
+  const topBand = scanBandEdges(sy, Math.min(sy + sh - 1, sy + Math.round(sh * 0.28)));
+  const botBand = scanBandEdges(Math.max(sy, sy + Math.round(sh * 0.72)), sy + sh - 1);
 
   return {
     detected: true,
     x: sx,
     y: sy,
     width: sw,
-    height: sh
+    height: sh,
+    corners: [
+      { x: topBand.left, y: sy },
+      { x: topBand.right, y: sy },
+      { x: botBand.right, y: sy + sh },
+      { x: botBand.left, y: sy + sh }
+    ]
   };
 }
 
 /**
- * Menggambar kotak deteksi biru ("biru-biru ke-detect") di sekeliling struk
+ * Menggambar poligon deteksi biru menyala di sekeliling struk (seperti aplikasi scanner modern)
  */
 export function drawBlueScannerOverlay(ctx, bounds, canvasW, canvasH) {
   if (!ctx || !bounds) return;
   ctx.clearRect(0, 0, canvasW, canvasH);
 
-  const { x, y, width: w, height: h } = bounds;
+  if (!bounds.detected) {
+    // Jika struk belum terdeteksi, tampilkan reticle bidikan halus di tengah layar kamera
+    const gw = Math.round(canvasW * 0.62);
+    const gh = Math.round(canvasH * 0.72);
+    const gx = Math.round((canvasW - gw) / 2);
+    const gy = Math.round((canvasH - gh) / 2);
+    const cLen = Math.max(18, Math.round(Math.min(gw, gh) * 0.08));
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.42)';
+    ctx.lineWidth = Math.max(2, Math.round(Math.min(canvasW, canvasH) * 0.005));
+    ctx.lineCap = 'round';
+
+    ctx.beginPath();
+    ctx.moveTo(gx, gy + cLen); ctx.lineTo(gx, gy); ctx.lineTo(gx + cLen, gy);
+    ctx.moveTo(gx + gw - cLen, gy); ctx.lineTo(gx + gw, gy); ctx.lineTo(gx + gw, gy + cLen);
+    ctx.moveTo(gx, gy + gh - cLen); ctx.lineTo(gx, gy + gh); ctx.lineTo(gx + cLen, gy + gh);
+    ctx.moveTo(gx + gw - cLen, gy + gh); ctx.lineTo(gx + gw, gy + gh); ctx.lineTo(gx + gw, gy + gh - cLen);
+    ctx.stroke();
+    return;
+  }
+
+  const pts = Array.isArray(bounds.corners) && bounds.corners.length === 4
+    ? bounds.corners
+    : [
+        { x: bounds.x, y: bounds.y },
+        { x: bounds.x + bounds.width, y: bounds.y },
+        { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
+        { x: bounds.x, y: bounds.y + bounds.height }
+      ];
+
+  ctx.save();
 
   // Fill biru transparan lembut di atas area struk yang terdeteksi
-  ctx.fillStyle = 'rgba(14, 165, 233, 0.16)';
-  ctx.fillRect(x, y, w, h);
-
-  // Garis tepi biru menyala
-  ctx.strokeStyle = '#38bdf8';
-  ctx.lineWidth = Math.max(2, Math.round(Math.min(canvasW, canvasH) * 0.005));
-  ctx.strokeRect(x, y, w, h);
-
-  // Siku sudut biru tebal (corner brackets)
-  const cornerLen = Math.max(16, Math.round(Math.min(w, h) * 0.09));
-  ctx.strokeStyle = '#0ea5e9';
-  ctx.lineWidth = Math.max(4, Math.round(Math.min(canvasW, canvasH) * 0.01));
-  ctx.lineCap = 'round';
-
-  // Kiri Atas
   ctx.beginPath();
-  ctx.moveTo(x, y + cornerLen);
-  ctx.lineTo(x, y);
-  ctx.lineTo(x + cornerLen, y);
+  ctx.moveTo(pts[0].x, pts[0].y);
+  ctx.lineTo(pts[1].x, pts[1].y);
+  ctx.lineTo(pts[2].x, pts[2].y);
+  ctx.lineTo(pts[3].x, pts[3].y);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(37, 99, 235, 0.18)';
+  ctx.fill();
+
+  // Garis poligon biru menyala mengelilingi kertas struk
+  ctx.shadowColor = 'rgba(59, 130, 246, 0.75)';
+  ctx.shadowBlur = 12;
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = Math.max(3, Math.round(Math.min(canvasW, canvasH) * 0.007));
+  ctx.lineJoin = 'round';
   ctx.stroke();
 
-  // Kanan Atas
-  ctx.beginPath();
-  ctx.moveTo(x + w - cornerLen, y);
-  ctx.lineTo(x + w, y);
-  ctx.lineTo(x + w, y + cornerLen);
-  ctx.stroke();
+  // Titik sudut biru terang
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#60a5fa';
+  const dotRadius = Math.max(4, Math.round(Math.min(canvasW, canvasH) * 0.009));
+  for (const pt of pts) {
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, dotRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
-  // Kiri Bawah
-  ctx.beginPath();
-  ctx.moveTo(x, y + h - cornerLen);
-  ctx.lineTo(x, y + h);
-  ctx.lineTo(x + cornerLen, y + h);
-  ctx.stroke();
-
-  // Kanan Bawah
-  ctx.beginPath();
-  ctx.moveTo(x + w - cornerLen, y + h);
-  ctx.lineTo(x + w, y + h);
-  ctx.lineTo(x + w, y + h - cornerLen);
-  ctx.stroke();
+  ctx.restore();
 }
 
 /**
  * Preprocessing gambar struk:
- * - Mendeteksi area kertas struk dan menggambar overlay deteksi biru pada pratinjau
- * - Memotong (auto-crop) area struk secara natural serta menghasilkan variasi contrast enhancement
- *   agar karakter teks struk thermal/pudar terbaca dengan sangat tajam dan presisi tinggi oleh OCR
+ * - Mendeteksi area kertas struk dan menggambar overlay deteksi biru
+ * - Menghasilkan gambar struk yang sudah di-crop lebih dekat (close-up preview) baik versi asli maupun versi tajam (enhanced)
  */
 export async function preprocessReceiptImage(file) {
   return new Promise((resolve, reject) => {
@@ -1025,7 +1168,7 @@ export async function preprocessReceiptImage(file) {
 
         const detectedPreviewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.88);
 
-        // Perbesar crop struk (upscale) agar teks kecil tetap tajam saat dibaca OCR
+        // Perbesar crop struk (upscale) agar tampilan preview lebih dekat & teks kecil tetap tajam saat dibaca OCR
         const upScale = Math.min(2.5, Math.max(1, 1500 / Math.max(1, bounds.width)));
         const outW = Math.round(bounds.width * upScale);
         const outH = Math.round(bounds.height * upScale);
@@ -1037,6 +1180,8 @@ export async function preprocessReceiptImage(file) {
         ocrCtx.imageSmoothingEnabled = true;
         ocrCtx.imageSmoothingQuality = 'high';
         ocrCtx.drawImage(srcCanvas, bounds.x, bounds.y, bounds.width, bounds.height, 0, 0, outW, outH);
+
+        const croppedPreviewDataUrl = ocrCanvas.toDataURL('image/jpeg', 0.92);
 
         // Varian grayscale dengan auto-levels berbasis persentil (menormalkan struk thermal pudar / pencahayaan miring)
         const enhancedCanvas = document.createElement('canvas');
@@ -1068,12 +1213,17 @@ export async function preprocessReceiptImage(file) {
         }
         enhCtx.putImageData(imgData, 0, 0);
 
+        const enhancedPreviewDataUrl = enhancedCanvas.toDataURL('image/jpeg', 0.92);
+
         ocrCanvas.toBlob((ocrBlob) => {
           enhancedCanvas.toBlob((enhancedBlob) => {
             resolve({
               ocrBlob: ocrBlob || file,
               enhancedBlob: enhancedBlob || ocrBlob || file,
-              detectedPreviewDataUrl
+              detectedPreviewDataUrl,
+              croppedPreviewDataUrl,
+              enhancedPreviewDataUrl,
+              bounds
             });
           }, 'image/png');
         }, 'image/png');
@@ -1082,7 +1232,10 @@ export async function preprocessReceiptImage(file) {
         resolve({
           ocrBlob: file,
           enhancedBlob: file,
-          detectedPreviewDataUrl: ''
+          detectedPreviewDataUrl: '',
+          croppedPreviewDataUrl: '',
+          enhancedPreviewDataUrl: '',
+          bounds: null
         });
       }
     };
@@ -1129,14 +1282,15 @@ function ensureTesseractLoaded(onProgress) {
 /**
  * Menjalankan OCR akurat pada file gambar struk dan mem-parsing hasilnya
  */
-export async function scanReceiptImage(file, onProgress) {
+export async function scanReceiptImage(file, onProgress, precomputed = null) {
   const fileCheck = validateReceiptFile(file);
   if (!fileCheck.valid) {
     throw new Error(fileCheck.message);
   }
 
-  if (onProgress) onProgress({ status: 'Mendeteksi area struk...', progress: 0.15 });
-  const { ocrBlob, enhancedBlob, detectedPreviewDataUrl } = await preprocessReceiptImage(file);
+  if (onProgress) onProgress({ status: 'Menyiapkan gambar struk...', progress: 0.15 });
+  const prep = precomputed || await preprocessReceiptImage(file);
+  const { ocrBlob, enhancedBlob, detectedPreviewDataUrl, croppedPreviewDataUrl } = prep;
 
   const Tesseract = await ensureTesseractLoaded(onProgress);
 

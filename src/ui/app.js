@@ -16,12 +16,13 @@ import {
 } from '../formatting/formatter.js?v=4.0';
 import {
   parseReceiptText,
+  preprocessReceiptImage,
   scanReceiptImage,
   detectPaperBounds,
   drawBlueScannerOverlay,
   validateReceiptFile,
   validateReceiptContent
-} from '../scanner/receiptScanner.js?v=4.0';
+} from '../scanner/receiptScanner.js?v=4.3';
 
 // State Aplikasi
 const state = {
@@ -1556,9 +1557,13 @@ function openScannerModal() {
   stopLiveCamera();
   updateRawTextButtonState();
 
+  const dropZone = document.getElementById('scannerDropZone');
   const dropzoneDefault = document.getElementById('dropzoneDefaultContent');
   const dropzonePreview = document.getElementById('dropzonePreviewContent');
+  const cropStage = document.getElementById('scannerCropPreviewStage');
 
+  if (cropStage) cropStage.style.display = 'none';
+  if (dropZone) dropZone.style.display = 'block';
   if (dropzoneDefault) dropzoneDefault.style.display = 'flex';
   if (dropzonePreview) dropzonePreview.style.display = 'none';
 
@@ -1569,6 +1574,8 @@ function openScannerModal() {
 
 function closeScannerModal() {
   stopLiveCamera();
+  const cropStage = document.getElementById('scannerCropPreviewStage');
+  if (cropStage) cropStage.style.display = 'none';
   const modal = document.getElementById('receiptScannerModal');
   if (!modal) return;
   modal.style.display = 'none';
@@ -1628,6 +1635,13 @@ function applyParsedReceiptAndGoToSplitBill(parsed) {
   showToast(`${state.items.length} menu${merchantInfo} (${state.currency}) berhasil dimasukkan`);
 }
 
+let pendingScanSession = {
+  file: null,
+  source: 'gallery',
+  precomputed: null,
+  activeFilter: 'original'
+};
+
 function initReceiptScanner() {
   const modal = document.getElementById('receiptScannerModal');
   if (!modal) return;
@@ -1647,13 +1661,13 @@ function initReceiptScanner() {
       btnModeAuto?.classList.add('active');
       btnModeManual?.classList.remove('active');
       if (cameraAutoHintBadge) {
-        cameraAutoHintBadge.textContent = 'Otomatis: Arahkan ke struk hingga kotak biru mengunci';
+        cameraAutoHintBadge.textContent = 'Arahkan kamera ke struk';
       }
     } else {
       btnModeManual?.classList.add('active');
       btnModeAuto?.classList.remove('active');
       if (cameraAutoHintBadge) {
-        cameraAutoHintBadge.textContent = 'Manual: Tekan tombol Ambil Foto di bawah untuk memotret';
+        cameraAutoHintBadge.textContent = 'Manual: Tekan tombol shutter untuk memotret';
       }
     }
   };
@@ -1676,8 +1690,19 @@ function initReceiptScanner() {
   const videoEl = document.getElementById('cameraVideoEl');
   const detectCanvas = document.getElementById('cameraDetectionCanvas');
   const btnSwitchCamera = document.getElementById('btnSwitchCamera');
+  const btnSwitchCameraTop = document.getElementById('btnSwitchCameraTop');
   const btnCloseCamera = document.getElementById('btnCloseCamera');
+  const btnCameraPickGallery = document.getElementById('btnCameraPickGallery');
 
+  // STAGE 2: Pratinjau Struk Lebih Dekat
+  const cropStage = document.getElementById('scannerCropPreviewStage');
+  const cropPreviewImg = document.getElementById('croppedReceiptPreviewImg');
+  const btnFilterOrig = document.getElementById('btnPreviewFilterOriginal');
+  const btnFilterEnh = document.getElementById('btnPreviewFilterEnhanced');
+  const btnRetakeScan = document.getElementById('btnRetakeScan');
+  const btnConfirmScanNext = document.getElementById('btnConfirmScanNext');
+
+  // STAGE 3: OCR Progress
   const dropzoneDefault = document.getElementById('dropzoneDefaultContent');
   const dropzonePreview = document.getElementById('dropzonePreviewContent');
   const previewImg = document.getElementById('receiptPreviewImg');
@@ -1711,6 +1736,7 @@ function initReceiptScanner() {
   tabText?.addEventListener('click', () => {
     clearScannerValidation();
     stopLiveCamera();
+    if (cropStage) cropStage.style.display = 'none';
     tabText.classList.add('active');
     tabPhoto?.classList.remove('active');
     if (panelText) panelText.style.display = 'block';
@@ -1726,6 +1752,13 @@ function initReceiptScanner() {
   btnPickGallery?.addEventListener('click', (e) => {
     e.stopPropagation();
     clearScannerValidation();
+    fileInput?.click();
+  });
+
+  btnCameraPickGallery?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearScannerValidation();
+    stopLiveCamera();
     fileInput?.click();
   });
 
@@ -1747,8 +1780,8 @@ function initReceiptScanner() {
         return;
       }
       const capturedFile = new File([blob], `struk-kamera-${Date.now()}.jpg`, { type: 'image/jpeg' });
-      handleImageFileScan(capturedFile);
-    }, 'image/jpeg', 0.92);
+      openCropPreviewStage(capturedFile, 'camera');
+    }, 'image/jpeg', 0.94);
   }
 
   // Loop deteksi kotak biru real-time di dalam kamera
@@ -1779,17 +1812,17 @@ function initReceiptScanner() {
           if (bounds.detected) {
             stableBlueDetectFrames++;
             if (cameraAutoHintBadge) {
-              const pct = Math.min(100, Math.round((stableBlueDetectFrames / 28) * 100));
-              cameraAutoHintBadge.textContent = `Struk terdeteksi (${pct}%) - Memotret otomatis...`;
+              const pct = Math.min(100, Math.round((stableBlueDetectFrames / 22) * 100));
+              cameraAutoHintBadge.textContent = `Memindai... tahan posisi (${pct}%)`;
             }
-            if (stableBlueDetectFrames >= 28) {
+            if (stableBlueDetectFrames >= 22) {
               captureFrameFromVideo();
               return;
             }
           } else {
             stableBlueDetectFrames = Math.max(0, stableBlueDetectFrames - 1);
             if (cameraAutoHintBadge) {
-              cameraAutoHintBadge.textContent = 'Otomatis: Arahkan kamera ke kertas struk';
+              cameraAutoHintBadge.textContent = 'Arahkan kamera ke struk';
             }
           }
         }
@@ -1803,6 +1836,8 @@ function initReceiptScanner() {
 
   async function startLiveCamera(facingMode = 'environment') {
     clearScannerValidation();
+    if (cropStage) cropStage.style.display = 'none';
+
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       showScannerValidation('Browser ini tidak mendukung akses kamera langsung. Silakan gunakan tombol Pilih Foto.');
       return;
@@ -1847,10 +1882,13 @@ function initReceiptScanner() {
     startLiveCamera(currentFacingMode);
   });
 
-  btnSwitchCamera?.addEventListener('click', () => {
+  const toggleFacingMode = () => {
     currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
     startLiveCamera(currentFacingMode);
-  });
+  };
+
+  btnSwitchCamera?.addEventListener('click', toggleFacingMode);
+  btnSwitchCameraTop?.addEventListener('click', toggleFacingMode);
 
   btnCloseCamera?.addEventListener('click', () => {
     stopLiveCamera();
@@ -1860,9 +1898,153 @@ function initReceiptScanner() {
     captureFrameFromVideo();
   });
 
+  // STAGE 2: Pratinjau Struk Lebih Dekat
+  async function openCropPreviewStage(file, source = 'gallery') {
+    clearScannerValidation();
+    const fileCheck = validateReceiptFile(file);
+    if (!fileCheck.valid) {
+      showScannerValidation(fileCheck.message);
+      return;
+    }
+
+    stopLiveCamera();
+
+    if (dropZone) dropZone.style.display = 'none';
+    if (cameraContainer) cameraContainer.style.display = 'none';
+    if (cropStage) cropStage.style.display = 'flex';
+
+    const fallbackUrl = URL.createObjectURL(file);
+    if (cropPreviewImg) {
+      cropPreviewImg.src = fallbackUrl;
+    }
+
+    btnFilterOrig?.classList.add('active');
+    btnFilterEnh?.classList.remove('active');
+
+    try {
+      const precomputed = await preprocessReceiptImage(file);
+      pendingScanSession = {
+        file,
+        source,
+        precomputed,
+        activeFilter: 'original'
+      };
+
+      if (precomputed.croppedPreviewDataUrl && cropPreviewImg) {
+        cropPreviewImg.src = precomputed.croppedPreviewDataUrl;
+      }
+    } catch (err) {
+      console.warn('Pratinjau struk memakai gambar asli:', err);
+      pendingScanSession = {
+        file,
+        source,
+        precomputed: null,
+        activeFilter: 'original'
+      };
+    }
+  }
+
+  btnFilterOrig?.addEventListener('click', () => {
+    if (!pendingScanSession.file) return;
+    btnFilterOrig.classList.add('active');
+    btnFilterEnh?.classList.remove('active');
+    pendingScanSession.activeFilter = 'original';
+    if (cropPreviewImg) {
+      cropPreviewImg.src = pendingScanSession.precomputed?.croppedPreviewDataUrl || URL.createObjectURL(pendingScanSession.file);
+    }
+  });
+
+  btnFilterEnh?.addEventListener('click', () => {
+    if (!pendingScanSession.file) return;
+    btnFilterEnh.classList.add('active');
+    btnFilterOrig?.classList.remove('active');
+    pendingScanSession.activeFilter = 'enhanced';
+    if (cropPreviewImg) {
+      cropPreviewImg.src = pendingScanSession.precomputed?.enhancedPreviewDataUrl || pendingScanSession.precomputed?.croppedPreviewDataUrl || URL.createObjectURL(pendingScanSession.file);
+    }
+  });
+
+  btnRetakeScan?.addEventListener('click', () => {
+    clearScannerValidation();
+    const lastSource = pendingScanSession.source;
+    pendingScanSession = { file: null, source: 'gallery', precomputed: null, activeFilter: 'original' };
+    if (cropStage) cropStage.style.display = 'none';
+
+    if (lastSource === 'camera') {
+      startLiveCamera(currentFacingMode);
+    } else {
+      if (dropZone) dropZone.style.display = 'block';
+      if (dropzoneDefault) dropzoneDefault.style.display = 'flex';
+      if (dropzonePreview) dropzonePreview.style.display = 'none';
+    }
+  });
+
+  btnConfirmScanNext?.addEventListener('click', () => {
+    if (!pendingScanSession.file) return;
+    runReceiptOcrProcess();
+  });
+
+  // STAGE 3: OCR Progress & Auto-input
+  async function runReceiptOcrProcess() {
+    clearScannerValidation();
+    if (!pendingScanSession.file) return;
+
+    if (cropStage) cropStage.style.display = 'none';
+    if (dropZone) dropZone.style.display = 'block';
+    if (dropzoneDefault) dropzoneDefault.style.display = 'none';
+    if (dropzonePreview) dropzonePreview.style.display = 'flex';
+    if (laserLine) laserLine.style.display = 'block';
+
+    const currentDisplayImg = pendingScanSession.precomputed?.croppedPreviewDataUrl ||
+      URL.createObjectURL(pendingScanSession.file);
+    if (previewImg) {
+      previewImg.src = currentDisplayImg;
+    }
+
+    if (statusText) statusText.textContent = 'Memindai daftar menu & harga...';
+    if (progressFill) progressFill.style.width = '15%';
+
+    try {
+      const { parsed, detectedPreviewDataUrl } = await scanReceiptImage(
+        pendingScanSession.file,
+        ({ status, progress, detectedPreviewDataUrl: liveBlueUrl }) => {
+          if (statusText && status) statusText.textContent = status;
+          if (progressFill && typeof progress === 'number') {
+            progressFill.style.width = `${Math.min(100, Math.round(progress * 100))}%`;
+          }
+          if (liveBlueUrl && previewImg && previewImg.src !== liveBlueUrl) {
+            previewImg.src = liveBlueUrl;
+          }
+        },
+        pendingScanSession.precomputed
+      );
+
+      if (detectedPreviewDataUrl && previewImg) {
+        previewImg.src = detectedPreviewDataUrl;
+      }
+
+      if (laserLine) laserLine.style.display = 'none';
+      if (progressFill) progressFill.style.width = '100%';
+      if (statusText) {
+        statusText.textContent = `Struk terdeteksi (${parsed.items.length} menu)! Mengalihkan otomatis...`;
+      }
+
+      setTimeout(() => {
+        applyParsedReceiptAndGoToSplitBill(parsed);
+      }, 350);
+    } catch (err) {
+      if (laserLine) laserLine.style.display = 'none';
+      if (progressFill) progressFill.style.width = '0%';
+      if (cropStage) cropStage.style.display = 'flex';
+      if (dropzonePreview) dropzonePreview.style.display = 'none';
+      showScannerValidation(err.message || 'Gagal memindai struk. Pastikan foto menampilkan struk pesanan yang jelas.');
+    }
+  }
+
   btnChangePhoto?.addEventListener('click', (e) => {
     e.stopPropagation();
     clearScannerValidation();
+    if (cropStage) cropStage.style.display = 'none';
     if (dropzoneDefault) dropzoneDefault.style.display = 'flex';
     if (dropzonePreview) dropzonePreview.style.display = 'none';
     fileInput?.click();
@@ -1894,69 +2076,15 @@ function initReceiptScanner() {
     dropZone.classList.remove('drag-over');
     const file = e.dataTransfer?.files?.[0];
     if (file) {
-      handleImageFileScan(file);
+      openCropPreviewStage(file, 'gallery');
     }
   });
 
   fileInput?.addEventListener('change', (e) => {
     const file = e.target.files?.[0];
-    if (file) handleImageFileScan(file);
+    if (file) openCropPreviewStage(file, 'gallery');
     fileInput.value = '';
   });
-
-  async function handleImageFileScan(file) {
-    clearScannerValidation();
-
-    const fileCheck = validateReceiptFile(file);
-    if (!fileCheck.valid) {
-      showScannerValidation(fileCheck.message);
-      return;
-    }
-
-    if (dropzoneDefault) dropzoneDefault.style.display = 'none';
-    if (dropzonePreview) dropzonePreview.style.display = 'flex';
-    if (laserLine) laserLine.style.display = 'block';
-
-    const previewUrl = URL.createObjectURL(file);
-    if (previewImg) {
-      previewImg.src = previewUrl;
-    }
-
-    if (statusText) statusText.textContent = 'Mendeteksi area struk...';
-    if (progressFill) progressFill.style.width = '12%';
-
-    try {
-      const { parsed, detectedPreviewDataUrl } = await scanReceiptImage(file, ({ status, progress, detectedPreviewDataUrl: liveBlueUrl }) => {
-        if (statusText && status) statusText.textContent = status;
-        if (progressFill && typeof progress === 'number') {
-          progressFill.style.width = `${Math.min(100, Math.round(progress * 100))}%`;
-        }
-        if (liveBlueUrl && previewImg && previewImg.src !== liveBlueUrl) {
-          previewImg.src = liveBlueUrl;
-        }
-      });
-
-      if (detectedPreviewDataUrl && previewImg) {
-        previewImg.src = detectedPreviewDataUrl;
-      }
-
-      if (laserLine) laserLine.style.display = 'none';
-      if (progressFill) progressFill.style.width = '100%';
-      if (statusText) {
-        statusText.textContent = `Struk terdeteksi (${parsed.items.length} menu)! Mengalihkan otomatis...`;
-      }
-
-      setTimeout(() => {
-        applyParsedReceiptAndGoToSplitBill(parsed);
-      }, 300);
-    } catch (err) {
-      if (laserLine) laserLine.style.display = 'none';
-      if (progressFill) progressFill.style.width = '0%';
-      if (dropzoneDefault) dropzoneDefault.style.display = 'flex';
-      if (dropzonePreview) dropzonePreview.style.display = 'none';
-      showScannerValidation(err.message || 'Gagal memindai struk. Pastikan foto adalah struk pesanan yang jelas.');
-    }
-  }
 
   btnParseRaw?.addEventListener('click', () => {
     clearScannerValidation();

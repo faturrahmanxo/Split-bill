@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=4.2">
+  <link rel="stylesheet" href="style.css?v=4.3">
 </head>
 <body>
   <!-- Smooth Aesthetic Preloader Screen -->
@@ -809,41 +809,20 @@
             </button>
           </div>
 
-          <!-- PANEL 1: Upload Foto / Kamera Live dengan Deteksi Biru & Pilihan Otomatis/Manual di Dalam Kamera -->
+          <!-- PANEL 1: Upload Foto / Kamera Live dengan Deteksi Biru, Preview Dekat, dan Pilihan Otomatis/Manual -->
           <div id="panelScanPhoto" class="scanner-source-panel">
             
-            <!-- Live WebRTC Camera Viewfinder (Otomatis & Manual berada di dalam kamera ini) -->
+            <!-- STAGE 1: Live WebRTC Camera Viewfinder -->
             <div id="cameraLiveContainer" class="camera-live-container" style="display: none;">
-              <div class="camera-video-wrap">
-                <video id="cameraVideoEl" autoplay playsinline muted></video>
-                <!-- Canvas Overlay Deteksi Biru Real-Time -->
-                <canvas id="cameraDetectionCanvas" class="camera-detection-canvas"></canvas>
-
-                <!-- Pilihan Otomatis vs Manual di Dalam Kamera -->
-                <div class="camera-in-view-mode-switch">
-                  <button id="btnScanModeAuto" class="camera-mode-btn active" type="button">
-                    <span>Otomatis</span>
-                  </button>
-                  <button id="btnScanModeManual" class="camera-mode-btn" type="button">
-                    <span>Manual</span>
-                  </button>
-                </div>
-
-                <span id="cameraAutoHintBadge" class="camera-guide-badge">Mendeteksi area struk...</span>
-              </div>
-
-              <div class="camera-controls-bar">
-                <button id="btnCloseCamera" class="btn-secondary btn-sm-pad" type="button">
-                  <span>Batal</span>
-                </button>
-                <button id="btnCaptureCamera" class="btn-primary btn-sm-pad" type="button">
+              <div class="camera-top-overlay">
+                <button id="btnCloseCamera" class="camera-circle-btn" type="button" title="Tutup Kamera">
                   <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="9"/>
-                    <circle cx="12" cy="12" r="4"/>
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
-                  <span id="btnCaptureCameraLabel">Ambil Foto</span>
                 </button>
-                <button id="btnSwitchCamera" class="btn-secondary btn-sm-pad" type="button" title="Putar Kamera">
+                <div id="cameraAutoHintBadge" class="camera-floating-hint">Arahkan kamera ke struk</div>
+                <button id="btnSwitchCameraTop" class="camera-circle-btn" type="button" title="Putar Kamera">
                   <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
                     <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
                     <path d="M21 3v5h-5"/>
@@ -852,9 +831,52 @@
                   </svg>
                 </button>
               </div>
+
+              <div class="camera-video-wrap">
+                <video id="cameraVideoEl" autoplay playsinline muted></video>
+                <!-- Canvas Overlay Deteksi Poligon Biru Real-Time -->
+                <canvas id="cameraDetectionCanvas" class="camera-detection-canvas"></canvas>
+              </div>
+
+              <!-- Sleek Bottom Camera Dock -->
+              <div class="camera-bottom-dock">
+                <div class="camera-shutter-row">
+                  <!-- Tombol Galeri di Dalam Kamera -->
+                  <button id="btnCameraPickGallery" class="camera-dock-icon-btn" type="button" title="Pilih dari Galeri">
+                    <svg class="icon-svg" viewBox="0 0 24 24">
+                      <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                      <circle cx="9" cy="9" r="2"/>
+                      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                    </svg>
+                  </button>
+
+                  <!-- Tombol Shutter Ambil Foto Bulat -->
+                  <button id="btnCaptureCamera" class="camera-shutter-btn" type="button" title="Ambil Foto">
+                    <span class="camera-shutter-inner"></span>
+                  </button>
+
+                  <!-- Tombol Putar Kamera -->
+                  <button id="btnSwitchCamera" class="camera-dock-icon-btn" type="button" title="Putar Kamera">
+                    <svg class="icon-svg" viewBox="0 0 24 24">
+                      <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                      <path d="M21 3v5h-5"/>
+                      <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+                      <path d="M3 21v-5h5"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- Mode Switcher: Manual vs Ambil Otomatis -->
+                <div class="camera-mode-pill-group">
+                  <button id="btnScanModeManual" class="camera-mode-pill" type="button">Manual</button>
+                  <button id="btnScanModeAuto" class="camera-mode-pill active" type="button">Ambil otomatis</button>
+                </div>
+
+                <div class="camera-dock-note">Split Bill hanya akan memproses foto struk di perangkat Anda</div>
+              </div>
             </div>
 
-            <!-- Dropzone & Image Preview -->
+            <!-- Dropzone Awal (Pilih Foto atau Buka Kamera) -->
             <div id="scannerDropZone" class="scanner-dropzone">
               <input id="receiptFileInput" type="file" accept="image/jpeg,image/png,image/webp" style="display: none;">
               
@@ -888,24 +910,69 @@
                   </button>
                 </div>
               </div>
+            </div>
 
-              <!-- Image Preview dengan Deteksi Biru -->
-              <div id="dropzonePreviewContent" class="dropzone-preview" style="display: none;">
-                <div class="receipt-thumb-wrap blue-detect-preview-frame">
-                  <img id="receiptPreviewImg" src="" alt="Preview Struk">
-                  <div id="scannerLaserLine" class="scanner-laser-blue"></div>
-                </div>
-                <div class="scanner-status-col">
-                  <div id="scannerStatusText" class="scanner-status-text">Mendeteksi &amp; memindai struk...</div>
-                  <div class="scanner-progress-bar">
-                    <div id="scannerProgressFill" class="scanner-progress-fill" style="width: 0%;"></div>
-                  </div>
-                  <button id="btnChangeReceiptPhoto" class="btn-text-nav" style="margin-top: 8px; padding: 4px 8px; font-size: 12px;" type="button">
-                    Pilih Foto Struk Lain
-                  </button>
+            <!-- STAGE 2: Preview Struk Lebih Dekat (Close-Up Cropped Preview Card) -->
+            <div id="scannerCropPreviewStage" class="crop-preview-stage" style="display: none;">
+              <div class="crop-preview-header">
+                <div class="crop-preview-header-info">
+                  <span class="crop-preview-badge">Pratinjau Struk Dekat</span>
+                  <p class="crop-preview-sub">Pastikan tulisan menu dan nominal harga terlihat jelas sebelum dipindai</p>
                 </div>
               </div>
+
+              <!-- Viewport Struk Dekat -->
+              <div class="crop-preview-viewport">
+                <img id="croppedReceiptPreviewImg" src="" alt="Pratinjau Struk Dekat">
+              </div>
+
+              <!-- Opsi Filter / Pertajam -->
+              <div class="crop-preview-filter-bar">
+                <button id="btnPreviewFilterOriginal" class="crop-filter-chip active" type="button">
+                  <svg class="icon-svg icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z"/></svg>
+                  <span>Foto Dekat</span>
+                </button>
+                <button id="btnPreviewFilterEnhanced" class="crop-filter-chip" type="button">
+                  <svg class="icon-svg icon-xs" viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                  <span>Pertajam Teks</span>
+                </button>
+              </div>
+
+              <!-- Action Bar Bawah: Hapus & Ulangi vs Berikutnya -->
+              <div class="crop-preview-actions">
+                <button id="btnRetakeScan" class="btn-secondary btn-sm-pad" type="button">
+                  <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                  <span>Hapus &amp; Ulangi</span>
+                </button>
+                <button id="btnConfirmScanNext" class="btn-primary btn-sm-pad" type="button">
+                  <span>Berikutnya</span>
+                  <svg class="icon-svg icon-sm" viewBox="0 0 24 24">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </button>
+              </div>
             </div>
+
+            <!-- STAGE 3: OCR Progress (Memindai & Membaca Struk) -->
+            <div id="dropzonePreviewContent" class="dropzone-preview" style="display: none;">
+              <div class="receipt-thumb-wrap blue-detect-preview-frame">
+                <img id="receiptPreviewImg" src="" alt="Memindai Struk">
+                <div id="scannerLaserLine" class="scanner-laser-blue"></div>
+              </div>
+              <div class="scanner-status-col">
+                <div id="scannerStatusText" class="scanner-status-text">Memindai daftar menu &amp; harga...</div>
+                <div class="scanner-progress-bar">
+                  <div id="scannerProgressFill" class="scanner-progress-fill" style="width: 0%;"></div>
+                </div>
+                <button id="btnChangeReceiptPhoto" class="btn-text-nav" style="margin-top: 8px; padding: 4px 8px; font-size: 12px;" type="button">
+                  Batal &amp; Pilih Foto Lain
+                </button>
+              </div>
+            </div>
+
           </div>
 
           <!-- PANEL 2: Tempel Teks Struk / Orderan (Ukuran Kotak Input & Contoh Disamakan) -->
@@ -950,6 +1017,6 @@
   </div>
 
   <!-- Main JavaScript App (ES Modules) -->
-  <script type="module" src="src/ui/app.js?v=4.2"></script>
+  <script type="module" src="src/ui/app.js?v=4.3"></script>
 </body>
 </html>

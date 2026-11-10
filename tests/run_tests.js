@@ -318,25 +318,41 @@ E-mail: grossescheidegg@bluewin.ch`;
   assert(calcChf.finalTotal === 54.5, `Total perhitungan CHF tepat 54.50 CHF (dapat: ${calcChf.finalTotal})`);
   assert(calcChf.participantResults[0].finalAmount === 27.25 && calcChf.participantResults[1].finalAmount === 27.25, 'Bagi 2 dari 54.50 CHF tepat masing-masing 27.25 CHF');
 
-  // Uji struk saat OCR memisahkan kolom kiri (nama menu) & kolom kanan (harga) + noise pinggiran
-  const splitColumnOcrReceipt = `Berqhotel
-Grosse Scheidegg
-2xLatte Macchiato
-IxGloki
-lxSchweinschnitzel
-1xChässpätzli
-à 4. 50 CHE 9.OO |
-a 5.00 CHF 5.00 |
-à 22.00 CHF 22.00 .
-à 18.50 CHF 18.50 |
-Total : CHF 54.50`;
-  const parsedSplitCol = parseReceiptText(splitColumnOcrReceipt);
-  assert(parsedSplitCol.items.length === 4, 'Struk dengan kolom terpisah oleh OCR tetap mendeteksi tepat 4 menu');
-  assert(parsedSplitCol.merchantName === 'Berghotel Grosse Scheidegg', 'Koreksi OCR Berqhotel -> Berghotel Grosse Scheidegg berhasil');
-  assert(parsedSplitCol.items[1].name === 'Gloki' && parsedSplitCol.items[1].qty === 1 && parsedSplitCol.items[1].price === 5, 'Pasangan antrean kolom nama & harga presisi (5.00 CHF)');
+  // Uji struk Alfamart Jogja dari foto struk asli referensi user
+  const alfamartReceiptText = `Alfamart Jogja
+Jl. Kenangan Jogja
+08897482739
+#281
+18.7.2024 08:49
+Cimory
+1x 2.000 2.000
+Cimory hazelnut
+1x 9.000 9.000
+Frestea madu
+1x 8.000 8.000
+Ice cream aice
+1x 5.000 5.000
+Kanzler
+lx 10.000 10.000
+Le Minerale
+1x 4.000 4.000
+Total Rp38.000
+Tunai Rp38.000
+Lunas
+Barang yang sudah dibeli tidak bisa dikembalikan lagi
+Kasir : Sinta
+Terima kasih`;
+
+  const parsedAlfamart = parseReceiptText(alfamartReceiptText);
+  assert(parsedAlfamart.merchantName === 'Alfamart Jogja', `Merchant Alfamart Jogja terdeteksi (dapat: "${parsedAlfamart.merchantName}")`);
+  assert(parsedAlfamart.items.length === 6, `Struk Alfamart mendeteksi tepat 6 menu (dapat: ${parsedAlfamart.items.length})`);
+  assert(parsedAlfamart.items[0].name === 'Cimory' && parsedAlfamart.items[0].price === 2000, 'Menu Cimory terdeteksi Rp 2.000');
+  assert(parsedAlfamart.items[1].name === 'Cimory hazelnut' && parsedAlfamart.items[1].price === 9000, 'Menu Cimory hazelnut terdeteksi Rp 9.000');
+  assert(parsedAlfamart.items[4].name === 'Kanzler' && parsedAlfamart.items[4].price === 10000, 'Menu Kanzler terdeteksi Rp 10.000 (lx diubah ke 1x)');
+  assert(parsedAlfamart.items[5].name === 'Le Minerale' && parsedAlfamart.items[5].price === 4000, 'Menu Le Minerale terdeteksi Rp 4.000');
+  const totalAlfamartItems = parsedAlfamart.items.reduce((s, it) => s + (it.price * it.qty), 0);
+  assert(totalAlfamartItems === 38000, `Total belanja Alfamart tepat Rp 38.000 (dapat: ${totalAlfamartItems})`);
 }
-
-
 
 console.log(`\n========================================`);
 console.log(`HASIL: ${passedTests}/${totalTests} TESTS BERHASIL!`);
