@@ -791,6 +791,16 @@ export function parseReceiptText(rawText, forcedCurrency = null) {
     }
   }
 
+  // Jika tidak ada item terpisah tapi ada nominal total struk, masukkan sebagai item total
+  if (items.length === 0 && (detectedTotal > 0 || detectedSubtotal > 0)) {
+    const amt = detectedTotal > 0 ? detectedTotal : detectedSubtotal;
+    items.push({
+      name: merchantName ? `Total di ${merchantName}` : 'Total Pesanan Struk',
+      qty: 1,
+      price: amt
+    });
+  }
+
   return {
     merchantName,
     currency: detectedCurrency,
@@ -1363,10 +1373,10 @@ export async function scanReceiptImage(file, onProgress, precomputed = null) {
   };
 
   const plan = [
-    { blob: ocrBlob, psm: 6 },
-    { blob: enhancedBlob || ocrBlob, psm: 6 },
-    { blob: enhancedBlob || ocrBlob, psm: 4 },
-    { blob: file, psm: 3 }
+    { blob: enhancedBlob || file, psm: 4 },
+    { blob: file, psm: 3 },
+    { blob: ocrBlob || file, psm: 4 },
+    { blob: enhancedBlob || file, psm: 6 }
   ];
   totalPasses = plan.length;
 

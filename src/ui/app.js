@@ -1703,70 +1703,6 @@ function initReceiptScanner() {
   const btnRetakeScan = document.getElementById('btnRetakeScan');
   const btnConfirmScanNext = document.getElementById('btnConfirmScanNext');
 
-  // AI Vision Scanner Controls & Status
-  const aiVisionStatusChip = document.getElementById('aiVisionStatusChip');
-  const aiVisionStatusLabel = document.getElementById('aiVisionStatusLabel');
-  const btnToggleAiSettings = document.getElementById('btnToggleAiSettings');
-  const aiKeySettingsBox = document.getElementById('aiKeySettingsBox');
-  const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
-  const btnSaveGeminiApiKey = document.getElementById('btnSaveGeminiApiKey');
-
-  let serverHasAiKey = false;
-  const updateAiBadgeUI = () => {
-    const userKey = (localStorage.getItem('splitbill_gemini_key') || '').trim();
-    if (userKey || serverHasAiKey) {
-      aiVisionStatusChip?.classList.add('active');
-      if (aiVisionStatusLabel) {
-        aiVisionStatusLabel.textContent = userKey
-          ? 'AI Vision Aktif (Google Gemini)'
-          : 'AI Vision Aktif (Server)';
-      }
-    } else {
-      aiVisionStatusChip?.classList.remove('active');
-      if (aiVisionStatusLabel) {
-        aiVisionStatusLabel.textContent = 'AI Vision (Klik Pengaturan AI untuk Pasang Key)';
-      }
-    }
-    if (geminiApiKeyInput && userKey) {
-      geminiApiKeyInput.value = userKey;
-    }
-  };
-
-  const checkServerAiStatus = async () => {
-    try {
-      const res = await fetch('/api/ai-status');
-      if (res.ok) {
-        const data = await res.json();
-        serverHasAiKey = Boolean(data.hasServerKey);
-      }
-    } catch (e) {
-      // Offline mode
-    }
-    updateAiBadgeUI();
-  };
-
-  checkServerAiStatus();
-
-  btnToggleAiSettings?.addEventListener('click', () => {
-    if (aiKeySettingsBox) {
-      const isHidden = aiKeySettingsBox.style.display === 'none';
-      aiKeySettingsBox.style.display = isHidden ? 'block' : 'none';
-    }
-  });
-
-  btnSaveGeminiApiKey?.addEventListener('click', () => {
-    const key = (geminiApiKeyInput?.value || '').trim();
-    if (!key) {
-      localStorage.removeItem('splitbill_gemini_key');
-      showToast('Kunci Gemini API dihapus. Scan akan memakai mode offline.');
-    } else {
-      localStorage.setItem('splitbill_gemini_key', key);
-      showToast('Kunci Google Gemini berhasil disimpan! Fitur AI Vision aktif.');
-    }
-    updateAiBadgeUI();
-    if (aiKeySettingsBox) aiKeySettingsBox.style.display = 'none';
-  });
-
   // STAGE 3: OCR Progress
   const dropzoneDefault = document.getElementById('dropzoneDefaultContent');
   const dropzonePreview = document.getElementById('dropzonePreviewContent');
@@ -2066,24 +2002,19 @@ function initReceiptScanner() {
       previewImg.src = currentDisplayImg;
     }
 
-    const savedGeminiKey = (localStorage.getItem('splitbill_gemini_key') || '').trim();
-    const useAiVision = Boolean(savedGeminiKey || serverHasAiKey);
-
-    if (statusText) {
-      statusText.textContent = useAiVision
-        ? 'Menganalisis struk dengan Google Gemini Vision AI...'
-        : 'Memindai daftar menu & harga...';
-    }
+    if (statusText) statusText.textContent = 'Memindai daftar menu & harga...';
     if (progressFill) progressFill.style.width = '20%';
 
     try {
       let parsedResult = null;
       let previewResultUrl = null;
 
-      if (useAiVision) {
+      // 1. Coba panggil server AI Vision secara otomatis (tanpa perlu input dari user)
+      let aiSuccess = false;
+      try {
         const { parsed, detectedPreviewDataUrl } = await scanReceiptWithGeminiVision(
           pendingScanSession.file,
-          savedGeminiKey,
+          '',
           ({ status, progress }) => {
             if (statusText && status) statusText.textContent = status;
             if (progressFill && typeof progress === 'number') {
@@ -2093,7 +2024,14 @@ function initReceiptScanner() {
         );
         parsedResult = parsed;
         previewResultUrl = detectedPreviewDataUrl;
-      } else {
+        aiSuccess = true;
+      } catch (aiErr) {
+        // Jika server belum dikonfigurasi AI key, lanjut otomatis ke pemindai lokal tanpa mengganggu user
+      }
+
+      // 2. Jika tanpa server AI, jalankan pemindai lokal otomatis
+      if (!aiSuccess) {
+        if (statusText) statusText.textContent = 'Mengekstrak menu & harga struk...';
         const { parsed, detectedPreviewDataUrl } = await scanReceiptImage(
           pendingScanSession.file,
           ({ status, progress, detectedPreviewDataUrl: liveBlueUrl }) => {
@@ -2129,13 +2067,7 @@ function initReceiptScanner() {
       if (progressFill) progressFill.style.width = '0%';
       if (cropStage) cropStage.style.display = 'flex';
       if (dropzonePreview) dropzonePreview.style.display = 'none';
-
-      if (!useAiVision) {
-        if (aiKeySettingsBox) aiKeySettingsBox.style.display = 'block';
-        showScannerValidation('Gagal mengenali struk secara offline. Pasang Google Gemini API Key gratis di atas untuk scan 99% akurat.');
-      } else {
-        showScannerValidation(err.message || 'Gagal memproses struk dengan Gemini Vision AI. Pastikan foto jelas dan API Key valid.');
-      }
+      showScannerValidation(err.message || 'Gagal memproses struk. Pastikan tulisan menu dan harga terlihat jelas.');
     }
   }
 
