@@ -1813,10 +1813,10 @@ function initReceiptScanner() {
           if (bounds.detected) {
             stableBlueDetectFrames++;
             if (cameraAutoHintBadge) {
-              const pct = Math.min(100, Math.round((stableBlueDetectFrames / 22) * 100));
+              const pct = Math.min(100, Math.round((stableBlueDetectFrames / 8) * 100));
               cameraAutoHintBadge.textContent = `Memindai... tahan posisi (${pct}%)`;
             }
-            if (stableBlueDetectFrames >= 22) {
+            if (stableBlueDetectFrames >= 8) {
               captureFrameFromVideo();
               return;
             }
@@ -1854,8 +1854,8 @@ function initReceiptScanner() {
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: facingMode },
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+            width: { ideal: 1080 },
+            height: { ideal: 1920 }
           },
           audio: false
         });

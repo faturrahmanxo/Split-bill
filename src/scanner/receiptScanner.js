@@ -918,13 +918,13 @@ export function detectPaperBounds(srcData, fullW, fullH) {
       const lumRight = 0.299 * srcData[idxRight] + 0.587 * srcData[idxRight + 1] + 0.114 * srcData[idxRight + 2];
       const gradX = Math.abs(lumRight - lumLeft);
 
-      if (lum > 138 && sat < 68) {
+      if (lum > 105 && sat < 80) {
         rowPaperCounts[y]++;
         colPaperCounts[x]++;
       }
 
-      // Deteksi transisi tinta teks di atas kertas terang
-      if (gradX > 26 && Math.max(lum, lumLeft, lumRight) > 135 && sat < 75) {
+      // Deteksi transisi tinta teks di atas kertas terang (termasuk font dot-matrix pudar)
+      if (gradX > 15 && Math.max(lum, lumLeft, lumRight) > 100 && sat < 85) {
         rowTextEdgeCounts[y]++;
         colTextEdgeCounts[x]++;
       }
@@ -932,8 +932,8 @@ export function detectPaperBounds(srcData, fullW, fullH) {
   }
 
   // Coba deteksi berbasis kerapatan baris teks di atas kertas struk terlebih dahulu (akurat meski background terang)
-  const minTextRow = Math.max(2, Math.floor(sampledCols * 0.045));
-  const minTextCol = Math.max(2, Math.floor(sampledRows * 0.055));
+  const minTextRow = Math.max(2, Math.floor(sampledCols * 0.03));
+  const minTextCol = Math.max(2, Math.floor(sampledRows * 0.035));
 
   let tTop = gridStep;
   let tBottom = fullH - gridStep - 1;
@@ -948,10 +948,10 @@ export function detectPaperBounds(srcData, fullW, fullH) {
   const textW = tRight - tLeft;
   const textH = tBottom - tTop;
   const hasStrongTextCluster =
-    textW > fullW * 0.16 &&
-    textH > fullH * 0.24 &&
-    textW < fullW * 0.94 &&
-    textH < fullH * 0.95;
+    textW > fullW * 0.08 &&
+    textH > fullH * 0.12 &&
+    textW < fullW * 0.98 &&
+    textH < fullH * 0.98;
 
   let leftX = 0;
   let rightX = fullW - 1;
@@ -962,15 +962,15 @@ export function detectPaperBounds(srcData, fullW, fullH) {
   if (hasStrongTextCluster) {
     // Perluas sedikit dari area teks menuju tepi kertas struk
     const expandX = Math.round(textW * 0.12);
-    const expandY = Math.round(textH * 0.1);
+    const expandY = Math.round(textH * 0.08);
     leftX = Math.max(0, tLeft - expandX);
     rightX = Math.min(fullW - 1, tRight + expandX);
     topY = Math.max(0, tTop - expandY);
     bottomY = Math.min(fullH - 1, tBottom + expandY);
     isValid = true;
   } else {
-    const minRowThreshold = Math.max(3, Math.floor(sampledCols * 0.26));
-    const minColThreshold = Math.max(3, Math.floor(sampledRows * 0.26));
+    const minRowThreshold = Math.max(2, Math.floor(sampledCols * 0.14));
+    const minColThreshold = Math.max(2, Math.floor(sampledRows * 0.14));
 
     while (topY < fullH && rowPaperCounts[topY] < minRowThreshold) topY += gridStep;
     while (bottomY > topY && rowPaperCounts[bottomY] < minRowThreshold) bottomY -= gridStep;
@@ -979,7 +979,7 @@ export function detectPaperBounds(srcData, fullW, fullH) {
 
     const cropW = rightX - leftX;
     const cropH = bottomY - topY;
-    isValid = cropW > fullW * 0.22 && cropH > fullH * 0.28 && (cropW < fullW * 0.95 || cropH < fullH * 0.95);
+    isValid = cropW > fullW * 0.10 && cropH > fullH * 0.14 && (cropW < fullW * 0.98 || cropH < fullH * 0.98);
   }
 
   if (!isValid) {
@@ -1025,7 +1025,7 @@ export function detectPaperBounds(srcData, fullW, fullH) {
         const idx = (y * fullW + x) * 4;
         const lum = 0.299 * srcData[idx] + 0.587 * srcData[idx + 1] + 0.114 * srcData[idx + 2];
         const sat = Math.max(srcData[idx], srcData[idx + 1], srcData[idx + 2]) - Math.min(srcData[idx], srcData[idx + 1], srcData[idx + 2]);
-        if (lum > 138 && sat < 68) {
+        if (lum > 105 && sat < 80) {
           if (rowL === -1) rowL = x;
           rowR = x;
         }
@@ -1069,9 +1069,9 @@ export function drawBlueScannerOverlay(ctx, bounds, canvasW, canvasH) {
   ctx.clearRect(0, 0, canvasW, canvasH);
 
   if (!bounds.detected) {
-    // Jika struk belum terdeteksi, tampilkan reticle bidikan halus di tengah layar kamera
-    const gw = Math.round(canvasW * 0.62);
-    const gh = Math.round(canvasH * 0.72);
+    // Jika struk belum terdeteksi, tampilkan reticle bidikan halus di tengah layar kamera (format struk tinggi)
+    const gw = Math.round(canvasW * 0.70);
+    const gh = Math.round(canvasH * 0.82);
     const gx = Math.round((canvasW - gw) / 2);
     const gy = Math.round((canvasH - gh) / 2);
     const cLen = Math.max(18, Math.round(Math.min(gw, gh) * 0.08));
